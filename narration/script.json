@@ -9,7 +9,8 @@
  },
  {
   "key": "explorer1",
-  "text": "America answered in February 1958. Explorer 1 rode a Juno I rocket from Cape Canaveral, and its Geiger counter found something no one expected. Earth is wrapped in belts of trapped radiation. We call them the Van Allen belts, after the scientist whose instrument found them."
+  "text": "America answered in February 1958. Explorer 1 rode a Juno I rocket from Cape Canaveral, and its Geiger counter found something no one expected. Earth is wrapped in belts of trapped radiation. We call them the Van Allen belts, after the scientist whose instrument found them.",
+  "say": "America answered in February 1958. Explorer 1 rode a Juno One rocket from Cape Canaveral, and its Geiger counter found something no one expected. Earth is wrapped in belts of trapped radiation. We call them the Van Allen belts, after the scientist whose instrument found them."
  },
  {
   "key": "vanguard1",
@@ -83,7 +84,8 @@
  },
  {
   "key": "apollo11",
-  "text": "This is the Saturn V, a hundred and ten meters tall. On July sixteenth, 1969, it launched Apollo 11. Four days later, Neil Armstrong and Buzz Aldrin landed on the Moon, while Michael Collins waited in orbit above. The Saturn V flew thirteen times, and never lost a payload."
+  "text": "This is the Saturn V, a hundred and ten meters tall. On July sixteenth, 1969, it launched Apollo 11. Four days later, Neil Armstrong and Buzz Aldrin landed on the Moon, while Michael Collins waited in orbit above. The Saturn V flew thirteen times, and never lost a payload.",
+  "say": "This is the Saturn Five, a hundred and ten meters tall. On July sixteenth, 1969, it launched Apollo 11. Four days later, Neil Armstrong and Buzz Aldrin landed on the Moon, while Michael Collins waited in orbit above. The Saturn Five flew thirteen times, and never lost a payload."
  },
  {
   "key": "ohsumi",
@@ -119,7 +121,8 @@
  },
  {
   "key": "skylab",
-  "text": "Skylab, America's first space station, was built inside a spare Saturn V third stage. It lost a solar wing and its sun shield on the way up, and the first crew rigged a parasol to keep it cool. Three crews lived aboard. In 1979 it fell back to Earth, scattering pieces across Western Australia."
+  "text": "Skylab, America's first space station, was built inside a spare Saturn V third stage. It lost a solar wing and its sun shield on the way up, and the first crew rigged a parasol to keep it cool. Three crews lived aboard. In 1979 it fell back to Earth, scattering pieces across Western Australia.",
+  "say": "Skylab, America's first space station, was built inside a spare Saturn Five third stage. It lost a solar wing and its sun shield on the way up, and the first crew rigged a parasol to keep it cool. Three crews lived aboard. In 1979 it fell back to Earth, scattering pieces across Western Australia."
  },
  {
   "key": "aryabhata",
