@@ -209,6 +209,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .capture .transport { margin-top: 72px; }
 .capture .latest { margin-top: 12px; font-size: 18px; max-width: 1000px; }
 .capture .latest-k { font-size: 14px; margin-right: 10px; }
+.capture .latest.tight { font-size: 15.5px; line-height: 24.3px; }
 .capture .cadence { height: 34px; bottom: calc(100% + 4px); }
 .capture .cadence-k { font-size: 13px; bottom: calc(100% + 7px); }
 .capture .track { height: 40px; }
@@ -418,6 +419,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .capture .plate-close { display: none; }
 .capture .plate-fig { font-size: 15px; }
 .capture .plate-title { font-size: 44px; margin-top: 14px; }
+.capture .plate-title .nobr { white-space: nowrap; }
 .capture .plate-kind { font-size: 17px; margin-top: 9px; }
 .capture .plate-view { background-size: 32px 32px, 32px 32px, 100% 100%; }
 .capture .plate-dims text, .capture .lineup-marks text { font-size: 16px; }
@@ -427,6 +429,11 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .capture .plate-specs dt { font-size: 13px; }
 .capture .plate-specs dd { font-size: 19px; margin-top: 4px; }
 .capture .plate-body { font-size: 19px; line-height: 1.45; }
+/* a card with more words than room (main.js fitPlate): a narrower rocket column, then smaller text */
+.capture .plate.tall.fit1 { grid-template-columns: 32% minmax(0, 1fr); }
+.capture .plate.fit2 .plate-body { font-size: 17.5px; }
+.capture .plate.fit3 .plate-body { font-size: 16px; line-height: 1.4; }
+.capture .plate.fit3 .plate-specs { gap: 8px 26px; }
 .capture .lineup { left: 60px; right: 60px; top: 150px; bottom: 172px; }
 .capture .lineup .kicker { font-size: 15px; }
 .capture .lineup h2 { font-size: 44px; margin-top: 12px; }

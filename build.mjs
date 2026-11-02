@@ -40,7 +40,15 @@ const bundle = await esbuild.build({
 });
 // NARR=narration/timing.json: the video build with each beat fitted to its narration, written to dist/narrated.html
 const NARR = process.env.NARR ? JSON.parse(fs.readFileSync(process.env.NARR, 'utf8')) : null;
-const script = (NARR ? `window.__TOUR_DUR=${JSON.stringify(NARR.dur)};window.__TOUR_GAP=${NARR.gap || 1.5};window.__TOUR_FINALE=${JSON.stringify(NARR.finale || null)};window.__TOUR_ORDER=${JSON.stringify(NARR.order || null)};\n` : '') + bundle.outputFiles[0].text.replaceAll('</script', '<\\/script');
+// the milestone satellites' rows in the catalog, so the tour can draw their orbits without the search index
+const SAT_ROWS = (() => {
+  const text = fs.readFileSync('src/search.txt', 'utf8');
+  const obj = text.slice(text.indexOf('\n#O\n') + 4, text.indexOf('\n#L\n')).split('\n');
+  const row = new Map(obj.map((line, i) => [line.split('\t', 3)[2], i]));
+  const links = JSON.parse(fs.readFileSync('src/ships/objects.json', 'utf8'));
+  return Object.fromEntries(Object.entries(links).filter(([, v]) => Array.isArray(v) && row.has(String(v[0][0]))).map(([k, v]) => [k, row.get(String(v[0][0]))]));
+})();
+const script = `window.__SAT_ROWS=${JSON.stringify(SAT_ROWS)};\n` + (NARR ? `window.__TOUR_DUR=${JSON.stringify(NARR.dur)};window.__TOUR_GAP=${NARR.gap || 1.5};window.__TOUR_FINALE=${JSON.stringify(NARR.finale || null)};window.__TOUR_ORDER=${JSON.stringify(NARR.order || null)};\n` : '') + bundle.outputFiles[0].text.replaceAll('</script', '<\\/script');
 // the NASA models the ships use (the rest are drawn in code), plus those the code-built Shuttle and Freedom 7 load
 const shipsSrc = fs.readFileSync('src/ships/ships.js', 'utf8');
 const MODEL_NAMES = [...new Set([...shipsSrc.matchAll(/src: 'nasa:([a-z0-9-]+)'/g)].map((m) => m[1]).concat(['space-shuttle-d', 'space-shuttle-d-door-prt', 'space-shuttle-d-door-stb', 'redstone-3-freedom-7']))];

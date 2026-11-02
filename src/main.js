@@ -4,6 +4,9 @@
 // frame for video (window.SIM), ?card draws the share image.
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
+import {Line2} from 'three/examples/jsm/lines/Line2.js';
+import {LineGeometry} from 'three/examples/jsm/lines/LineGeometry.js';
+import {LineMaterial} from 'three/examples/jsm/lines/LineMaterial.js';
 import meta from './catalog.json';
 import {CATS, EARTH_SPIN, MU, NO_END, ORBIT_GLSL, RE, WHO, countsOn, countsOnWho, dayOf, dateOf, decode, formatDay, launchedBy, positionAt, positionOf} from './orbits.js';
 import {createEarth, createStars} from './earth.js';
@@ -18,6 +21,8 @@ import LINKS from './ships/objects.json';
 
 const params = new URLSearchParams(location.search);
 const CAPTURE = params.has('capture') || window.__CAPTURE === true;
+// the milestone satellites' rows in the catalog (build.mjs), for their orbits in the tour
+const SAT_ROWS = window.__SAT_ROWS || {};
 const CARD = params.has('card');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = (id) => document.getElementById(id);
@@ -164,7 +169,72 @@ const alignTrain = (data, train, centreOf) => {
   for (const k of train) data.o1[k * 4 + 1] += best;
 };
 
+// The tour's satellite cards show the satellite's orbit (Brad, 2 Nov). Seen from close to its own plane an orbit is
+// only a line across the globe, so for each card the camera rises or dips (only that, so the globe still turns the
+// one way) by as little as opens the orbit out (T.SAT_TILT); and as the satellite's place along its orbit is
+// illustrative anyway, it is put on the near side of Earth halfway through the card, so it is seen going round.
+const viewOrbits = (data, centreOf) => {
+  const axis = new THREE.Vector3(0, 1, 0);
+  const p = new THREE.Vector3();
+  const q = new THREE.Vector3();
+  const report = [];
+  for (const beat of T.BEATS) {
+    if (beat.kind !== 'ship' || !T.SAT_APO[beat.key]) continue;
+    const i = SAT_ROWS[beat.key];
+    const tm = (beat.a + beat.b) / 2;
+    const [day, sim] = [T.shownDay(tm), T.tourSim(tm)];
+    const d = Math.min(Math.max(day, data.o1[i * 4 + 3] + 1 / 1440), data.o2[i * 4] - 1 / 1440);
+    // the orbit's axis, among the orbits (which turn with T.tourTurn)
+    const period = (2 * Math.PI) / data.o1[i * 4 + 2];
+    positionOf(data, i, d, sim, p);
+    positionOf(data, i, d, sim + period / 4, q);
+    const n = p.clone().cross(q).normalize().applyAxisAngle(axis, T.tourTurn(tm));
+    const cam = T.tourCamera(tm, centreOf, spinAt);
+    const el = (Math.asin(Math.max(-1, Math.min(1, cam.dir.y))) * 180) / Math.PI;
+    const az = (Math.atan2(cam.dir.x, cam.dir.z) * 180) / Math.PI;
+    const side = (de) => Math.abs(T.sphericalDir(az, el + de).dot(n));
+    // at least 30 degrees out of the orbit's plane if a tilt of up to 24 degrees gets there, else as far as it can
+    let best = 0;
+    for (let k = 1; k <= 24; k += 1) {
+      for (const de of [k, -k]) {
+        if (el + de > 62 || el + de < -50) continue;
+        if (side(best) < 0.5 && side(de) > side(best) + 0.02) best = de;
+      }
+      if (side(best) >= 0.5) break;
+    }
+    T.SAT_TILT[beat.key] = best;
+    // the satellite on the near side at the middle of the card, and high on the globe rather than low down behind the
+    // date and the counts
+    const look = T.sphericalDir(az, el + best);
+    const eye = look.clone().applyAxisAngle(axis, -T.tourTurn(tm));
+    const up = axis.clone().addScaledVector(look, -look.y).normalize().applyAxisAngle(axis, -T.tourTurn(tm));
+    const m0 = data.o1[i * 4 + 1];
+    let bestM = m0;
+    let bestDot = -2;
+    for (let k = 0; k < 72; k += 1) {
+      data.o1[i * 4 + 1] = m0 + (k / 72) * 2 * Math.PI;
+      const r = positionOf(data, i, d, sim, p).length();
+      p.normalize();
+      // (a high orbit is clear of the globe nearly all the way round, so there it is mostly the height that counts; an
+      // orbit that runs off the frame, Chandra's, keeps it on the inner part, which is in view)
+      const apo = T.SAT_APO[beat.key];
+      const dot = apo > 8 ? 0.3 * p.dot(up) - r / apo : (apo > 2 ? 0.2 : 1) * p.dot(eye) + 0.6 * p.dot(up);
+      if (dot > bestDot) [bestDot, bestM] = [dot, data.o1[i * 4 + 1]];
+    }
+    data.o1[i * 4 + 1] = bestM;
+    report.push([beat.key, Math.round((Math.asin(side(0)) * 180) / Math.PI), best, Math.round((Math.asin(side(best)) * 180) / Math.PI), Math.round((T.tourSim(tm + 1) - sim) / period * 100) / 100]);
+  }
+  // (for checking: key, degrees out of the orbit's plane before and after, the tilt, turns of the orbit a second)
+  window.__ORBIT_VIEW = report;
+};
+// cards about a rocket rather than the satellite it carried keep their launch site in the tour, and so do the Starlink
+// cards, which show the whole swarm (Brad: Starlink is the one exception, with so many satellites)
+const ROCKET_CARDS = new Set(['falcon1', 'falcon9', 'ariane1', 'starlink', 'starlinkv2']);
 function main(data, tracks) {
+  // the satellites whose orbits the tour draws, by how far out each orbit reaches (T.SAT_APO)
+  for (const [key, i] of Object.entries(SAT_ROWS)) {
+    if (!ROCKET_CARDS.has(key)) T.SAT_APO[key] = data.o0[i * 4] * (1 + data.o0[i * 4 + 1]);
+  }
   const stage = $('stage');
   const canvas = $('view');
   const renderer = makeRenderer(canvas);
@@ -210,6 +280,40 @@ function main(data, tracks) {
   foundMark.visible = false;
   world.add(foundMark);
   const foundAt = new THREE.Vector3();
+  // the tour's satellite: its whole orbit as a bold line among everything else that is up, and a ring on it
+  const tourOrbitGeo = new LineGeometry();
+  const tourOrbitPts = new Float32Array((ORBIT_N + 1) * 3);
+  tourOrbitGeo.setPositions(tourOrbitPts);
+  const tourOrbitMat = new LineMaterial({color: 0xf58025, linewidth: 2.6, transparent: true, opacity: 0.85, depthWrite: false});
+  const tourOrbit = new Line2(tourOrbitGeo, tourOrbitMat);
+  tourOrbit.frustumCulled = false;
+  const tourSatMat = foundMat.clone();
+  const tourSatRing = new THREE.Mesh(foundRing.geometry, tourSatMat);
+  const tourSat = new THREE.Group();
+  tourSat.add(tourOrbit, tourSatRing);
+  tourSat.visible = false;
+  world.add(tourSat);
+  const placeTourSat = (i, day, sim, opacity) => {
+    tourSat.visible = i != null && opacity > 0.01;
+    if (!tourSat.visible) return;
+    const period = (2 * Math.PI) / data.o1[i * 4 + 2];
+    for (let k = 0; k <= ORBIT_N; k += 1) {
+      positionOf(data, i, day, sim + (k / ORBIT_N) * period, foundAt);
+      tourOrbitPts[k * 3] = foundAt.x;
+      tourOrbitPts[k * 3 + 1] = foundAt.y;
+      tourOrbitPts[k * 3 + 2] = foundAt.z;
+    }
+    tourOrbitGeo.setPositions(tourOrbitPts);
+    renderer.getDrawingBufferSize(tourOrbitMat.resolution);
+    // (the line's width is in device pixels: the same on screen in the 1080p and the 4K video)
+    tourOrbitMat.linewidth = 2.6 * renderer.getPixelRatio();
+    tourOrbitMat.opacity = 0.85 * opacity;
+    positionOf(data, i, day, sim, foundAt);
+    tourSatRing.position.copy(foundAt);
+    tourSatRing.quaternion.copy(world.quaternion).invert().multiply(camera.quaternion);
+    tourSatRing.scale.setScalar(camera.position.distanceTo(foundAt.clone().applyAxisAngle(Y_AXIS, world.rotation.y)) * 0.02);
+    tourSatMat.opacity = opacity;
+  };
   const placeFound = (i, day, sim, opacity) => {
     foundMark.visible = i != null && opacity > 0.01 && day >= data.o1[i * 4 + 3] && day < data.o2[i * 4];
     if (!foundMark.visible) return;
@@ -285,6 +389,8 @@ function main(data, tracks) {
     }
     return out.multiplyScalar(1 / parts.length);
   };
+  viewOrbits(data, centreOf);
+  points.geometry.attributes.aO1.needsUpdate = true;
   if (tracks.starlink && tracks.starlink.train) {
     alignTrain(data, tracks.starlink.train, centreOf);
     points.geometry.attributes.aO1.needsUpdate = true;
@@ -545,6 +651,13 @@ function main(data, tracks) {
     latestT.replaceChildren(seg(formatDay(L.day[k]), 'l-date'), seg(L.lvs[L.lv[k]], 'l-lv'), seg(L.name[k], 'l-name'),
       seg(L.sites[L.site[k]][0], 'l-site'));
     if (!L.ok[k]) latestT.append(seg('failed', 'failed'));
+    // a long payload name drops the launch site before any words are cut, and in the video the line sets a little smaller
+    const cut = () => [...latestT.children].some((el) => el.scrollWidth > el.clientWidth);
+    latestEl.classList.remove('tight');
+    if (cut()) {
+      latestT.querySelector('.l-site').remove();
+      if (CAPTURE && cut()) latestEl.classList.add('tight');
+    }
   };
 
   const hud = (day, {showTime}) => {
@@ -638,6 +751,16 @@ function main(data, tracks) {
     $('plate-fig').textContent = found || sh.stats ? sh.fig : isEvent ? `Debris event ${sh.index + 1} of 3` : `Fig. ${String(sh.index + 1).padStart(2, '0')}`;
     $('plate-when').textContent = found ? sh.when : sh.stats ? formatDay(sh.day) : `${formatDay(sh.day)} · ${clock(sh.day)}`;
     $('plate-title').textContent = sh.title;
+    // in the video a name like Mercury-Redstone stays on one line rather than breaking at its hyphen
+    if (CAPTURE && /\S-\S/.test(sh.title)) {
+      $('plate-title').replaceChildren(...sh.title.split(/(\S+-\S+)/).map((w, i) => {
+        if (!(i % 2)) return w;
+        const n = document.createElement('span');
+        n.className = 'nobr';
+        n.textContent = w;
+        return n;
+      }));
+    }
     $('plate-kind').textContent = sh.kind;
     $('plate-site').textContent = isEvent ? sh.place : `Launched from ${SITES[sh.site].name}`;
     $('plate-body').textContent = sh.body;
@@ -868,6 +991,17 @@ function main(data, tracks) {
   // the card for a ship or a debris event: spin and tilt turn the ship's model, local is seconds since it opened
   const phoneQ = window.matchMedia('(max-width: 860px)');
   const readoutEl = document.querySelector('.hud .readout');
+  // in the video nothing scrolls, so a card whose words don't fit makes room for them, one step at a time:
+  // a narrower rocket column, then smaller text (style.css: .fit1 to .fit3)
+  const plateScroll = document.querySelector('.plate-scroll');
+  const FITS = ['fit1', 'fit2', 'fit3'];
+  const fitPlate = () => {
+    plate.classList.remove(...FITS);
+    for (const f of FITS) {
+      if (plateScroll.scrollHeight <= plateScroll.clientHeight) return;
+      plate.classList.add(f);
+    }
+  };
   const showPlate = (key, opacity, spinDeg, {tilt = 0, local = 99, slide = 0, tour = false} = {}) => {
     const on = !!key && opacity > 0.002;
     plate.classList.toggle('on', on);
@@ -887,6 +1021,7 @@ function main(data, tracks) {
       fillPlate(sh);
       const tall = !!mdl && mdl.model.dim === 'height' && mdl.model.size[1] > 15;
       plate.classList.toggle('tall', tall && plate.clientWidth >= 560);
+      if (CAPTURE) fitPlate();
     }
     if (shipCanvas.parentNode !== plateView) plateView.prepend(shipCanvas);
     const dpr = CAPTURE ? window.devicePixelRatio || 1 : Math.min(window.devicePixelRatio || 1, 2);
@@ -1042,6 +1177,7 @@ function main(data, tracks) {
   let blackEl = null;
   const tourFrame = (t, {spin = 0, tilt = 0} = {}) => {
     foundMark.visible = false;
+    tourSat.visible = false;
     const day = T.shownDay(t);
     const sim = T.tourSim(t);
     const speed = Math.abs(T.shownDay(t + 0.05) - T.shownDay(t - 0.05)) / 0.1;
@@ -1053,7 +1189,10 @@ function main(data, tracks) {
     const lu = T.lineupAt(t);
     plate.classList.add('tour');
     setRoom(roomAt);
-    showMarker(p && p.kind === 'ship' ? SHIP[p.key].site : null, p ? p.opacity : 0, p ? p.local : 0);
+    // a satellite's card shows its orbit among everything else that is up (Brad, 2 Nov); a rocket's or a probe's shows
+    // its launch site
+    const satRow = p && p.kind === 'ship' && T.SAT_APO[p.key] ? SAT_ROWS[p.key] : null;
+    showMarker(p && p.kind === 'ship' && satRow == null ? SHIP[p.key].site : null, p ? p.opacity : 0, p ? p.local : 0);
     const look = T.lookAt(t);
     uniforms.uKeep.value = look.keep;
     uniforms.uMode.value = Math.max(legendMode, look.mode);
@@ -1064,6 +1203,16 @@ function main(data, tracks) {
     pulses.points.visible = false;
     uniforms.uHi.value = T.trainGlowAt(t);
     world.rotation.y = T.tourTurn(t);
+    if (satRow != null) {
+      // (the ring faces the camera, so the camera goes in place first; the orbit is drawn from just after the
+      // satellite reached orbit until it came down, whatever the clock says)
+      camera.position.copy(cam.target).addScaledVector(cam.dir, cam.dist);
+      camera.up.set(0, 1, 0);
+      camera.lookAt(cam.target);
+      world.updateMatrixWorld();
+      const d = Math.min(Math.max(day, data.o1[satRow * 4 + 3] + 1 / 1440), data.o2[satRow * 4] - 1 / 1440);
+      placeTourSat(satRow, d, sim, p.opacity);
+    }
     draw(day, sim, Math.max(0.03, speed * 0.3), cam);
     hud(day, {showTime: speed < 3 && speed > 0.01});
     const c = T.captionAt(t);
@@ -1996,6 +2145,7 @@ function main(data, tracks) {
     const shownFound = live.plateKey && FOUND[live.plateKey];
     showMarker(shownShip ? shownShip.site : shownFound && shownFound.site ? shownFound.site : null, live.room, local);
     placeFound(shownFound && shownFound.obj != null ? shownFound.obj : null, live.day, live.sim, live.room);
+    tourSat.visible = false;
     legend.style.opacity = (1 - live.room).toFixed(3);
     if (live.fly) {
       live.fly.t = Math.min(1, live.fly.t + dt / 1.6);

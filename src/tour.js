@@ -458,14 +458,33 @@ const CLOSE = (() => {
 // Each ship's plate gets one slow camera move across its whole length, taking turns: rising away from the launch
 // site, a sweep around the globe, a push in toward the site.
 const SHIP_ORDER = Object.fromEntries(BEATS.filter((b) => b.kind === 'ship').map((b, i) => [b.key, i]));
-function shipShot(beat, t, az, el) {
+// The milestone satellites whose orbits the tour draws (main.js fills it in from the catalog before the tour starts):
+// key -> the orbit's highest point, in Earth radii. Their cards show the orbit instead of the launch site.
+export const SAT_APO = {};
+// how far out the camera goes to take in a satellite's whole orbit (Earth stays where it is on screen), and the most
+// it goes out for one that reaches far beyond geostationary (Chandra's runs off the frame)
+const ORBIT_FIT = 3.7;
+const ORBIT_FIT_MAX = 34;
+// and how far the camera rises or dips (degrees) so a satellite's orbit isn't seen edge-on, as a line (main.js)
+export const SAT_TILT = {};
+function shipShot(beat, t, az, el0) {
+  // (a satellite's card: the camera eases into its view of the orbit once the card is up, and back before the next shot)
+  const sat = !!SAT_APO[beat.key];
+  const ease = Math.min(4, (beat.b - beat.a) * 0.22);
+  const out = sat ? smooth(clamp01(Math.min((t - beat.a - 1.2) / ease, (beat.b - 0.4 - t) / ease))) : 0;
+  const el = el0 + (SAT_TILT[beat.key] || 0) * out;
   const k = smooth(clamp01((t - beat.a) / Math.max(6, beat.b - beat.a)));
   const lerp = (x, y) => x + (y - x) * k;
   const move = SHIP_ORDER[beat.key] % 3;
   // (az is the camera's bearing at t, which the plan below keeps turning a little slower than the globe)
-  if (move === 0) return {dir: sphericalDir(az, el + lerp(-7, 7)), dist: 2.6 * (3.75 / 2.6) ** k, target: new THREE.Vector3()};
-  if (move === 1) return {dir: sphericalDir(az, el + lerp(9, -3)), dist: lerp(3.55, 3.25), target: new THREE.Vector3()};
-  return {dir: sphericalDir(az, el + lerp(10, 2)), dist: 3.9 * (2.95 / 3.9) ** k, target: new THREE.Vector3()};
+  const shot = move === 0 ? {dir: sphericalDir(az, el + lerp(-7, 7)), dist: 2.6 * (3.75 / 2.6) ** k, target: new THREE.Vector3()}
+    : move === 1 ? {dir: sphericalDir(az, el + lerp(9, -3)), dist: lerp(3.55, 3.25), target: new THREE.Vector3()}
+      : {dir: sphericalDir(az, el + lerp(10, 2)), dist: 3.9 * (2.95 / 3.9) ** k, target: new THREE.Vector3()};
+  // a satellite whose orbit reaches past the frame: the camera eases out to take in the whole orbit once the card is
+  // up, and back in before the next shot (Brad: show the orbit with everything moving around it)
+  const fit = Math.min(ORBIT_FIT_MAX, ORBIT_FIT * (SAT_APO[beat.key] || 0));
+  if (fit > shot.dist * 1.15) shot.dist *= (fit / shot.dist) ** out;
+  return shot;
 }
 // The cold open's camera: out from the globe as the years fill it, then a slow turn around today's swarm.
 function introCam(t) {
