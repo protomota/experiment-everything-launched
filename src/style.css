@@ -51,6 +51,9 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .kicker { font: 600 11.5px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
 .title h1 { margin-top: 10px; font-size: 34px; line-height: 1.04; font-weight: 600; letter-spacing: -0.02em; }
 .lede { margin-top: 10px; font-size: 14.5px; line-height: 1.45; color: var(--ink-2); max-width: 400px; }
+.source-link { margin-top: 8px; font: 500 12px/1.4 var(--mono); letter-spacing: 0.04em; }
+.source-link a { color: var(--accent); text-decoration: none; }
+.source-link a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 .legend { grid-column: 2; grid-row: 1 / span 3; align-self: start; display: grid; gap: 4px; width: 238px; }
 .cat {
@@ -158,7 +161,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 @media (max-width: 860px) {
   .hud { padding: 18px 18px 14px; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 1fr auto auto auto; }
   .title h1 { font-size: 26px; }
-  .lede { display: none; }
+  .lede, .source-link { display: none; }
   .legend { grid-column: 1; grid-row: 2; width: auto; display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
   .cat { width: auto; padding: 4px 10px; gap: 7px; font-size: 12px; grid-template-columns: 9px auto auto; }
   .cat .dot { width: 8px; height: 8px; }
@@ -185,7 +188,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 }
 
 /* ------------------------------------------------------------ video capture: 1920 x 1080 CSS pixels */
-.capture .site-top, .capture .notes, .capture .sources, .capture .site-foot, .capture .play, .capture .pill, .capture .lede { display: none; }
+.capture .site-top, .capture .notes, .capture .sources, .capture .site-foot, .capture .play, .capture .pill, .capture .lede, .capture .source-link { display: none; }
 .capture .stage { height: 100vh; min-height: 0; }
 .capture #view { cursor: default; }
 .capture .hud { padding: 44px 60px 40px; column-gap: 40px; }
@@ -215,7 +218,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .capture .tick::before { width: 3px; }
 
 /* ------------------------------------------------------------ share card: 1200 x 630 */
-.card .site-top, .card .notes, .card .sources, .card .site-foot, .card .transport, .card .caption, .card .lede, .card .date { display: none; }
+.card .site-top, .card .notes, .card .sources, .card .site-foot, .card .transport, .card .caption, .card .lede, .card .source-link, .card .date { display: none; }
 .card .stage { height: 100vh; min-height: 0; }
 .card .hud { padding: 44px 52px; grid-template-rows: auto 1fr auto; }
 .card .title { max-width: 560px; }
@@ -514,7 +517,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 /* wide but short (a tablet or an unfolded phone in landscape): tighter title and readout, no lede */
 @media (min-width: 861px) and (max-height: 720px) {
   .hud { padding: 18px 28px 14px; }
-  .lede { display: none; }
+  .lede, .source-link { display: none; }
   .title h1 { font-size: 28px; margin-top: 8px; }
   .find { margin-top: 12px; }
   .date { font-size: 42px; }
