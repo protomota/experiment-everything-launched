@@ -18,7 +18,9 @@ const BREAKUP_DAY = {
 const END_DAY = meta.endDay;
 
 // [kind, key, seconds on screen]
+// (open and close are only in the 5-minute cut: its cold open is a line of its own, and so is its last line)
 const PLAN = [
+  ['open', 'open', 12],
   ['ship', 'sputnik1', 15],
   ['ship', 'sputnik2', 12.5],
   ['ship', 'explorer1', 12.5],
@@ -107,15 +109,20 @@ const PLAN = [
   ['stats', 'junk', 16],
   ['stats', 'who', 16],
   ['lineup', 'lineup', 12],
+  ['close', 'close', 9],
 ];
 // The narrated video build (NARR=... node build.mjs) sets each beat's length to fit its narration, leaves out
 // beats that have none (ships added to the page after the narration was recorded), and shortens the gaps.
 const FIT = (typeof window !== 'undefined' && window.__TOUR_DUR) || null;
 const GAP = (typeof window !== 'undefined' && window.__TOUR_GAP) || 1.5;
+// a cut can put the beats in its own order (the 5-minute cut opens with the whole lineup)
+const ORDER = (typeof window !== 'undefined' && window.__TOUR_ORDER) || null;
+const PLAN_OF = Object.fromEntries(PLAN.map((p) => [p[1], p]));
 export const BEATS = [];
 {
   let t = 0;
-  for (const [kind, key, dur] of PLAN) {
+  for (const [kind, key, dur] of ORDER ? ORDER.map((k) => PLAN_OF[k]) : PLAN) {
+    if (!FIT && (kind === 'open' || kind === 'close')) continue;
     if (FIT && !FIT[key]) continue;
     const d = FIT ? FIT[key] : dur;
     BEATS.push({kind, key, a: t, b: t + d});
@@ -126,13 +133,23 @@ const last = BEATS[BEATS.length - 1];
 const TODAY = BEATS.find((b) => b.kind === 'today');
 const LINEUP = BEATS.find((b) => b.kind === 'lineup');
 const STATS = BEATS.filter((b) => b.kind === 'stats');
+const OPEN = BEATS.find((b) => b.kind === 'open');
+const CLOSER = BEATS.find((b) => b.kind === 'close');
+const SPUTNIK = BEATS.find((b) => b.key === 'sputnik1');
+// The 5-minute cut's prelude: its cold open, then the whole lineup (the rockets to scale, then everything they
+// carried), and only then the clock rewinds to Sputnik and the stories begin. Its last line has a beat of its own.
+const PRELUDE = !!(FIT && OPEN && LINEUP && SPUTNIK && LINEUP.a < SPUTNIK.a);
 export const TOUR_DURATION = last.b;
 
 // The narrated video opens cold: "Since 1957, we have put more than sixty-nine thousand objects into orbit" plays
 // over all sixty-nine years running by in seconds, the swarm holds on "this is every one of them", then the clock
 // rewinds to October 1957 and the camera drops to Baikonur for Sputnik's launch. The page's own tour starts plainly.
-// Times are seconds into the tour, set from the pauses in the first line of narration.
-const INTRO = FIT && BEATS[0].key === 'sputnik1' ? {grow: [0.6, 7.2], rewind: [12.0, 14.0], launch: 14.6, plate: 15.0, room: 13.4} : null;
+// Times are seconds into the tour, set from the pauses in the first line of narration. In the 5-minute cut the cold
+// open is its own line and the lineup follows it; the rewind to Sputnik comes after the lineup, as its line starts
+// ("It all began on October fourth, 1957").
+const INTRO = PRELUDE
+  ? {grow: [OPEN.a + 0.6, OPEN.a + 7.2], hold: OPEN.b + GAP, rewind: [SPUTNIK.a - 1.2, SPUTNIK.a + 0.8], launch: SPUTNIK.a + 2.0, plate: SPUTNIK.a + 2.4, room: SPUTNIK.a + 1.0}
+  : FIT && BEATS[0].key === 'sputnik1' ? {grow: [0.6, 7.2], hold: 12.0, rewind: [12.0, 14.0], launch: 14.6, plate: 15.0, room: 13.4} : null;
 
 // ------------------------------------------------------------ the date
 const DATE_KEYS = [];
@@ -141,13 +158,15 @@ for (const beat of BEATS) {
   if (kind === 'ship') {
     const L = dayOf(SHIP[key].when);
     beat.day = L;
-    if (key === 'sputnik1') DATE_KEYS.push([a, L - 0.32], [a + (INTRO ? INTRO.launch : 3.4), L], [b, L + 0.9]);
+    if (key === 'sputnik1') DATE_KEYS.push([a, L - 0.32], [INTRO ? INTRO.launch : a + 3.4, L], [b, L + 0.9]);
     else if (key === 'starlink') DATE_KEYS.push([a, L - 0.3], [a + 1.1, L], [a + 3.5, L + 1.5], [b, L + 4]);
     else DATE_KEYS.push([a, L - 0.22], [a + 1.1, L], [b, L + 0.8]);
   } else if (kind === 'breakup') {
     const T = BREAKUP_DAY[key];
     beat.day = T;
     DATE_KEYS.push([a, T - 1.5 / 24], [a + 4.5, T + 2.53 / 24], [b - 0.3, T + 3.6]);
+  } else if (kind === 'open' || (kind === 'lineup' && PRELUDE)) {
+    // the prelude's dates are shownDay's own (the date itself starts at Sputnik)
   } else if (kind === 'today') {
     DATE_KEYS.push([a + 2, END_DAY]);
   } else if (kind === 'stats') {
@@ -163,7 +182,7 @@ const WARP_KEYS = [];
 for (const {kind, key, a, b} of BEATS) {
   const w = kind === 'breakup' ? 110 : kind === 'ship' ? (key === 'starlink' ? 220 : 40) : 600;
   // the cold open swirls the swarm, then settles to the plate's calm as the clock rewinds
-  if (INTRO && key === 'sputnik1') WARP_KEYS.push([0, 600], [INTRO.rewind[0], 600], [INTRO.rewind[1], w], [b - 0.2, w]);
+  if (INTRO && key === 'sputnik1') WARP_KEYS.push(...(PRELUDE ? [] : [[0, 600]]), [INTRO.rewind[0], 600], [INTRO.rewind[1], w], [b - 0.2, w]);
   else WARP_KEYS.push([a + (a ? 0.2 : 0), w], [b - 0.2, w]);
 }
 
@@ -211,7 +230,7 @@ export const tourDay = monotone(DATE_KEYS);
 // The date the globe and the counters show. Same as tourDay, except in the narrated cold open, where it runs to
 // today and back again (tourDay itself never runs backwards: tourTimeAt depends on that).
 export function shownDay(t) {
-  if (FINALE && LINEUP && t > LINEUP.a + FINALE.carry) return finaleDay(t - LINEUP.a);
+  if (FINALE && LINEUP && t > LINEUP.a + FINALE.carry && !(PRELUDE && t >= INTRO.rewind[0])) return finaleDay(t - LINEUP.a);
   if (!INTRO || t >= INTRO.rewind[1]) return tourDay(t);
   const [g0, g1] = INTRO.grow;
   const [r0, r1] = INTRO.rewind;
@@ -388,7 +407,12 @@ const CLOSE = (() => {
     const l = H.b - H.a;
     keys.push([H.a + 0.45 * l, 3.4, -6, 85], [H.b, 5.0, 8, 110]);
   }
-  if (LINEUP) {
+  if (CLOSER) {
+    // the 5-minute cut's last line: the globe, centred again, draws back slowly to the end
+    const l = CLOSER.b - CLOSER.a;
+    keys.push([CLOSER.a + 0.4 * l, 6.0, 18, 62], [CLOSER.b, 9.5, 22, 84], [CLOSER.b + 1, 9.5, 22, 84]);
+  }
+  if (LINEUP && !PRELUDE) {
     if (FINALE) {
       // the narrated finale: the globe comes back large once the row of ships has gone, and pulls out slowly to the end
       const g = LINEUP.a + BELTPLAN.gone;
@@ -413,7 +437,7 @@ function shipShot(beat, t, az, el) {
 // The cold open's camera: out from the globe as the years fill it, then a slow turn around today's swarm.
 function introCam(t) {
   const grow = smooth(clamp01((t - INTRO.grow[0]) / (INTRO.grow[1] - INTRO.grow[0])));
-  const hold = smooth(clamp01((t - INTRO.grow[1]) / (INTRO.rewind[0] - INTRO.grow[1])));
+  const hold = smooth(clamp01((t - INTRO.grow[1]) / (INTRO.hold - INTRO.grow[1])));
   return {dir: sphericalDir(20 - t * 1.0, 8 + 18 * grow - 6 * hold), dist: 3.2 * (10 / 3.2) ** grow - 3.4 * hold, target: new THREE.Vector3()};
 }
 
@@ -422,6 +446,8 @@ function introCam(t) {
 const beatCamera = (beat, t, centreOf, spinAt) => {
   const day = tourDay(t);
   const sim = tourSim(t);
+  // the 5-minute cut's prelude stays on the cold open's slow turn (the globe is dimmed behind the lineup)
+  if (beat.kind === 'open' || (beat.kind === 'lineup' && PRELUDE)) return introCam(t);
   if (beat.kind === 'ship' && beat.key === 'starlink') {
     const p = centreOf('starlink', day, sim, tmpA);
     const q = centreOf('starlink', day, sim + 240, tmpB);
@@ -480,7 +506,7 @@ export function tourCamera(t, centreOf, spinAt) {
 
 // ------------------------------------------------------------ what's on screen
 // The spec plate showing at t: which ship, how visible, and how long it has been up.
-const plateIn = (beat) => beat.a + (beat.key === 'sputnik1' ? (INTRO ? INTRO.plate : 2.4) : beat.kind === 'breakup' ? 0.8 : 0.35);
+const plateIn = (beat) => (beat.key === 'sputnik1' && INTRO ? INTRO.plate : beat.a + (beat.key === 'sputnik1' ? 2.4 : beat.kind === 'breakup' ? 0.8 : 0.35));
 export function plateAt(t) {
   for (const beat of BEATS) {
     if (beat.kind !== 'ship' && beat.kind !== 'breakup' && beat.kind !== 'stats') continue;
@@ -499,7 +525,7 @@ const isCard = (beat) => beat && (beat.kind === 'ship' || beat.kind === 'breakup
 const ROOM = [];
 BEATS.forEach((beat, i) => {
   if (!isCard(beat)) return;
-  const a = beat.a + (beat.key === 'sputnik1' ? (INTRO ? INTRO.room : 2.0) : beat.kind === 'breakup' ? 0.4 : -GAP / 2);
+  const a = beat.key === 'sputnik1' && INTRO ? INTRO.room : beat.a + (beat.key === 'sputnik1' ? 2.0 : beat.kind === 'breakup' ? 0.4 : -GAP / 2);
   const b = beat.b + GAP / 2;
   if (isCard(BEATS[i - 1])) ROOM[ROOM.length - 1][1] = b;
   else ROOM.push([a, b]);
@@ -532,6 +558,8 @@ export function lineupAt(t) {
   const beat = BEATS.find((b) => b.kind === 'lineup');
   if (t < beat.a - 0.3) return null;
   const u = t - beat.a;
+  // (in the 5-minute cut the lineup comes first, and is done with once the globe is back)
+  if (PRELUDE && u > BELTPLAN.gone + 2.5) return null;
   const show = smooth(clamp01((u + 0.3) / 0.9));
   if (!FINALE) return {opacity: show, dim: show, local: u};
   // the narrated finale: the row of ships runs off the left of the screen, the heading goes with its last ships, and

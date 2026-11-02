@@ -40,7 +40,7 @@ const bundle = await esbuild.build({
 });
 // NARR=narration/timing.json: the video build with each beat fitted to its narration, written to dist/narrated.html
 const NARR = process.env.NARR ? JSON.parse(fs.readFileSync(process.env.NARR, 'utf8')) : null;
-const script = (NARR ? `window.__TOUR_DUR=${JSON.stringify(NARR.dur)};window.__TOUR_GAP=${NARR.gap || 1.5};window.__TOUR_FINALE=${JSON.stringify(NARR.finale || null)};\n` : '') + bundle.outputFiles[0].text.replaceAll('</script', '<\\/script');
+const script = (NARR ? `window.__TOUR_DUR=${JSON.stringify(NARR.dur)};window.__TOUR_GAP=${NARR.gap || 1.5};window.__TOUR_FINALE=${JSON.stringify(NARR.finale || null)};window.__TOUR_ORDER=${JSON.stringify(NARR.order || null)};\n` : '') + bundle.outputFiles[0].text.replaceAll('</script', '<\\/script');
 // the NASA models the ships use (the rest are drawn in code), plus those the code-built Shuttle and Freedom 7 load
 const shipsSrc = fs.readFileSync('src/ships/ships.js', 'utf8');
 const MODEL_NAMES = [...new Set([...shipsSrc.matchAll(/src: 'nasa:([a-z0-9-]+)'/g)].map((m) => m[1]).concat(['space-shuttle-d', 'space-shuttle-d-door-prt', 'space-shuttle-d-door-stb', 'redstone-3-freedom-7']))];

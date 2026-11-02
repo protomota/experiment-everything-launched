@@ -4,12 +4,13 @@ session and reads as one performance. Never mix these clips with an earlier pass
 line into a pass: when any line changes, record the whole pass again.
 
     ELEVENLABS_API_KEY=... python3 record_pass.py clips-pass4
+    ELEVENLABS_API_KEY=... python3 record_pass.py clips-social-pass1 script-social.json   (the 5-minute cut's own pass)
 
 Each line is its own request, stitched to the lines before it (previous_request_ids, the last three) and given the
 next line as context (next_text). Uses the with-timestamps endpoint and saves NN-key.json beside each NN-key.mp3 with
 the character alignment and request id (tools/narrate.mjs syncs the finale's pictures to the words with it).
 If the run stops part way, run the same command again within two hours: it carries on from the last saved line,
-still stitched to it. Reads script.json next to this file. The key is read from the environment only and never
+still stitched to it. Reads script.json next to this file, or the script named after the folder. The key is read from the environment only and never
 printed or saved.
 """
 import base64
@@ -30,10 +31,10 @@ key = os.environ.get('ELEVENLABS_API_KEY', '').strip()
 if not key:
     sys.exit('ELEVENLABS_API_KEY is not set')
 if len(sys.argv) < 2:
-    sys.exit('usage: record_pass.py <new folder>')
+    sys.exit('usage: record_pass.py <new folder> [script.json]')
 out = os.path.join(HERE, sys.argv[1])
 os.makedirs(out, exist_ok=True)
-script = json.load(open(os.path.join(HERE, 'script.json'), encoding='utf-8'))
+script = json.load(open(os.path.join(HERE, sys.argv[2] if len(sys.argv) > 2 else 'script.json'), encoding='utf-8'))
 say = [s.get('say', s['text']) for s in script]
 
 req = urllib.request.Request('https://api.elevenlabs.io/v1/user/subscription', headers={'xi-api-key': key})

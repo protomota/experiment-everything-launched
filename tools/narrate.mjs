@@ -12,21 +12,25 @@ const LEAD_FIRST = 0.6;
 const TAIL = 0.3; // and the beat holds this long after the last word
 const GAP = Number(process.env.GAP || 1.2); // between beats (the page's own tour uses 1.5); build.mjs passes it to src/tour.js
 // a shorter cut: KEYS=sputnik1,vostok1,... NAME=social GAP=2 node tools/narrate.mjs narration/clips
-//   -> narration/timing-social.json and narration/narration-social.wav, with only those beats
-const KEYS = process.env.KEYS ? new Set(process.env.KEYS.split(',')) : null;
+//   -> narration/timing-social.json and narration/narration-social.wav, with only those beats, in that order
+//   (SCRIPT=narration/script-social.json when the cut has lines of its own, recorded as a pass of their own)
+const KEYS = process.env.KEYS ? process.env.KEYS.split(',') : null;
 const NAME = process.env.NAME ? `-${process.env.NAME}` : '';
 // the shortest a beat can be, whatever its line: breakups need time for the collision and the cloud to spread
-const MIN = {ship: 6, breakup: 11, today: 6, stats: 10, lineup: 10};
-// except the finale, which holds on the globe for a few seconds after its last word
-const HOLD_AFTER = {lineup: 4.5};
+const MIN = {ship: 6, breakup: 11, today: 6, stats: 10, lineup: 10, open: 6, close: 6};
+// except the finale, which holds on the globe for a few seconds after its last word (as does the 5-minute cut's last
+// line; its lineup comes first, and the row runs off and the globe comes back in those seconds)
+const HOLD_AFTER = {lineup: 4.5, close: 4.5};
 // the finale's pictures follow the words of its line: narration/script.json "marks" are found in each clip's
 // character alignment (NN-key.json beside the mp3, saved by make_narration.py), or estimated from where they fall in
 // the text when a clip has none
-const SCRIPT = Object.fromEntries(JSON.parse(fs.readFileSync('narration/script.json', 'utf8')).map((s) => [s.key, s]));
+const SCRIPT = Object.fromEntries(JSON.parse(fs.readFileSync(process.env.SCRIPT || 'narration/script.json', 'utf8')).map((s) => [s.key, s]));
 
-const plan = [...fs.readFileSync('src/tour.js', 'utf8').matchAll(/\['(ship|breakup|today|stats|lineup)', '(\w+)', ([\d.]+)\]/g)]
-  .map(([, kind, key, dur]) => ({kind, key, dur: Number(dur)}))
-  .filter((b) => !KEYS || KEYS.has(b.key));
+const PLAN = [...fs.readFileSync('src/tour.js', 'utf8').matchAll(/\['(ship|breakup|today|stats|lineup|open|close)', '(\w+)', ([\d.]+)\]/g)]
+  .map(([, kind, key, dur]) => ({kind, key, dur: Number(dur)}));
+const plan = KEYS
+  ? KEYS.map((k) => PLAN.find((b) => b.key === k) || (() => { throw new Error(`no beat ${k} in src/tour.js`); })())
+  : PLAN.filter((b) => b.kind !== 'open' && b.kind !== 'close');
 const clips = Object.fromEntries(fs.readdirSync(dir).filter((f) => /^\d+-\w+\.mp3$/.test(f)).map((f) => [f.replace(/^\d+-|\.mp3$/g, ''), path.join(dir, f)]));
 const missing = plan.filter((b) => !clips[b.key]).map((b) => b.key);
 if (missing.length) throw new Error(`no clip for ${missing.join(', ')}`);
@@ -95,7 +99,7 @@ const finale = (() => {
   console.log(`finale marks from ${al ? 'the alignment' : 'an estimate (no alignment saved)'}: carry ${F.carry} s, ${F.stops.length} named ships ${F.stops[0][0]}-${F.stops[F.stops.length - 1][1]} s, globe ${F.globe.join('-')} s of ${dur.lineup} s`);
   return F;
 })();
-fs.writeFileSync(`narration/timing${NAME}.json`, JSON.stringify({dur, gap: GAP, cues, total, finale}, null, 1));
+fs.writeFileSync(`narration/timing${NAME}.json`, JSON.stringify({dur, gap: GAP, cues, total, finale, ...(KEYS ? {order: KEYS} : {})}, null, 1));
 const pauses = cues.slice(1).map((c, i) => c.at - (cues[i].at + cues[i].talk));
 console.log(`pauses between lines: median ${pauses.sort((x, y) => x - y)[pauses.length >> 1].toFixed(2)} s, longest ${pauses[pauses.length - 1].toFixed(2)} s`);
 console.log(`${plan.length} beats, tour ${(total / 60).toFixed(1)} min (${total.toFixed(1)} s); narration ${(cues.reduce((a, c) => a + c.len, 0) / 60).toFixed(1)} min`);
