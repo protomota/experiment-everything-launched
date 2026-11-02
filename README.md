@@ -141,12 +141,14 @@ picture lands on its words.
   `eleven_multilingual_v2`), every line in order and each stitched to the ones before it, so the read sounds like
   one session: `ELEVENLABS_API_KEY=... python3 narration/record_pass.py clips-passN`. It saves `NN-key.mp3` and
   `NN-key.json` (the character alignment) per line. Change any line and you record the whole pass again; clips from
-  different passes are never mixed. The current pass is `narration/clips-pass3`.
-- `NOMIX=1 node tools/narrate.mjs narration/clips-pass3` fits each beat to its line and writes
+  different passes are never mixed. The current pass is `narration/clips-pass4`. The 5-minute cut has lines of its
+  own (`narration/script-social.json`: an opening line, the lineup first, a closing line), recorded as a pass of their
+  own: `python3 narration/record_pass.py clips-social-pass1 narration/script-social.json`.
+- `NOMIX=1 node tools/narrate.mjs narration/clips-pass4` fits each beat to its line and writes
   `narration/timing.json` (drop `NOMIX` to also mix `narration/narration.wav`). The finale's timing comes from the
   lineup line's alignment, and `src/belt.js` plans the row of ships so each named ship is centred and still for all
   of its words. The 5-minute cut:
-  `KEYS=sputnik1,vostok1,apollo11,iss,starlink,jwst,starship,today,junk,lineup NAME=social GAP=1.4 NOMIX=1 node tools/narrate.mjs narration/clips-pass3`.
+  `SCRIPT=narration/script-social.json KEYS=open,lineup,sputnik1,vostok1,apollo11,iss,starlink,jwst,starship,today,junk,close NAME=social GAP=1.4 NOMIX=1 node tools/narrate.mjs narration/clips-social-pass1`.
 - `NARR=narration/timing.json node build.mjs` writes `dist/narrated.html` (and `timing-social.json` gives
   `dist/narrated-social.html`).
 
