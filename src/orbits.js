@@ -156,6 +156,11 @@ uniform vec3 uWColor[${WHO.length}];
 uniform float uDayI;
 uniform float uDayF;
 uniform float uSim;
+// (the tour's slower clock for the breakaway pieces' orbits turning apart: the days it runs between, and how far
+// between; uDriftS < 0: the date's own)
+uniform float uDriftA;
+uniform float uDriftB;
+uniform float uDriftS;
 uniform float uFlashDays;
 uniform float uPx;
 uniform float uBoost;
@@ -168,6 +173,8 @@ uniform vec3 uColor[5];
 varying vec3 vColor;
 varying float vAlpha;
 const float TAU = 6.28318530718;
+// an angle as the shorter turn, between -half a turn and half a turn
+float shorter(float x) { return mod(x + 0.5 * TAU, TAU) - 0.5 * TAU; }
 void main() {
   int c = int(aCat + 0.5);
   int w = int(aWho + 0.5);
@@ -189,8 +196,17 @@ void main() {
   float a = aO0.x;
   float e = aO0.y;
   float inc = aO0.z;
-  float node = aO0.w + aO2.y * age;
-  float argp = aO1.x + aO2.z * age;
+  float node;
+  float argp;
+  if (uDriftS < 0.0) {
+    node = aO0.w + aO2.y * age;
+    argp = aO1.x + aO2.z * age;
+  } else {
+    float ageA = max(uDriftA - t0, 0.0);
+    float ageB = max(uDriftB - t0, 0.0);
+    node = aO0.w + aO2.y * ageA + shorter(aO2.y * (ageB - ageA)) * uDriftS;
+    argp = aO1.x + aO2.z * ageA + shorter(aO2.z * (ageB - ageA)) * uDriftS;
+  }
   float M = mod(aO1.y + aO1.z * uSim + aO2.w * min(age, ${SPREAD_DAYS.toFixed(1)}), TAU);
   float E = M;
   for (int k = 0; k < 8; k++) E -= (E - e * sin(E) - M) / (1.0 - e * cos(E));

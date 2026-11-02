@@ -86,6 +86,9 @@ const makePoints = (data) => {
     uDayI: {value: 0},
     uDayF: {value: 0},
     uSim: {value: 0},
+    uDriftA: {value: 0},
+    uDriftB: {value: 0},
+    uDriftS: {value: -1},
     uFlashDays: {value: 1},
     uPx: {value: 1},
     uBoost: {value: 1},
@@ -1176,7 +1179,10 @@ function main(data, tracks) {
     if (w > 0.001) camera.setViewOffset(width, height, dx * w, dy * w * 0.8, width, height);
     else camera.clearViewOffset();
   };
-  const draw = (day, sim, flashDays, cam) => {
+  const draw = (day, sim, flashDays, cam, drift = null) => {
+    // (T.driftAt: in the tour, the breakaway pieces' orbits turn apart on a slower clock than the date)
+    uniforms.uDriftS.value = drift ? drift[2] : -1;
+    if (drift) [uniforms.uDriftA.value, uniforms.uDriftB.value] = drift;
     // while there are only a few objects, draw them larger so the first ones can be seen
     const total = countsOn(data, day).reduce((a, b) => a + b, 0);
     uniforms.uBoost.value = 1 + 1.6 * Math.exp(-total / 150);
@@ -1235,7 +1241,7 @@ function main(data, tracks) {
       const d = Math.min(Math.max(day, data.o1[satRow * 4 + 3] + 1 / 1440), data.o2[satRow * 4] - 1 / 1440);
       placeTourSat(satRow, d, sim, p.opacity * orbitIn);
     }
-    draw(day, sim, Math.max(0.03, speed * 0.3), cam);
+    draw(day, sim, Math.max(0.03, speed * 0.3), cam, T.driftAt(t));
     hud(day, {showTime: speed < 3 && speed > 0.01});
     const c = T.captionAt(t);
     showCaption(c ? c.key : null, c ? c.opacity : 0);
@@ -1279,6 +1285,8 @@ function main(data, tracks) {
       // for checking the camera: the shot plan (each beat's kind, key and start, and for launch and breakup shots the
       // plan's choices), and (tools/spincheck.mjs) at each time the camera's bearing around Earth's axis, the globe's
       // own turn (both in degrees), the camera's distance and its elevation
+      // (for checking: the slower clock the breakaway pieces' orbits turn on, as [day from, day to, how far between])
+      drift: (ts) => ts.map((t) => T.driftAt(t)),
       plan: () => {
         T.tourCamera(0, centreOf, spinAt);
         return T.shotPlanInfo();

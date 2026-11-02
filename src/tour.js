@@ -186,12 +186,14 @@ for (const beat of BEATS) {
 }
 
 // How fast objects move along their orbits, as a multiple of real time: calm under a spec plate, slow motion for a
-// breakup, fast in between.
+// breakup, a little livelier in the cold open and the closing sections. (Those ran at 600x, and whole rings of dots
+// sharing an orbit poured round the globe in streams; Brad, 2 Nov: keep them floating.)
+const WARP_WIDE = 100;
 const WARP_KEYS = [];
 for (const {kind, key, a, b} of BEATS) {
-  const w = kind === 'breakup' ? 110 : kind === 'ship' ? (key === 'starlink' ? 220 : 40) : 600;
-  // the cold open swirls the swarm, then settles to the plate's calm as the clock rewinds
-  if (INTRO && key === 'sputnik1') WARP_KEYS.push(...(PRELUDE ? [] : [[0, 600]]), [INTRO.rewind[0], 600], [INTRO.rewind[1], w], [b - 0.2, w]);
+  const w = kind === 'breakup' ? 110 : kind === 'ship' ? (key === 'starlink' ? 220 : 40) : WARP_WIDE;
+  // the cold open turns the swarm, then settles to the plate's calm as the clock rewinds
+  if (INTRO && key === 'sputnik1') WARP_KEYS.push(...(PRELUDE ? [] : [[0, WARP_WIDE]]), [INTRO.rewind[0], WARP_WIDE], [INTRO.rewind[1], w], [b - 0.2, w]);
   else WARP_KEYS.push([a + (a ? 0.2 : 0), w], [b - 0.2, w]);
 }
 
@@ -364,6 +366,64 @@ export function tourTimeAt(day) {
   return hi;
 }
 export const tourSimAtDay = (day) => tourSim(tourTimeAt(day));
+
+// The breakaway pieces' slow turning while the clock races. The pieces of a breakup share an orbit at first, and their
+// orbits slowly turn apart (a few tenths of a degree a day, some faster). Tied to the date, that turning ran at the
+// clock's speed, and when the clock raced between cards (hundreds of days a second) the pieces poured round the globe
+// in streams while everything else floated (Brad, 2 Nov). So it follows a slower clock instead: the date averaged over
+// DRIFT_W seconds of the tour, which spreads each race's turning over the calm cards either side of it. Where even that
+// runs faster than DRIFT_RATE days a second (the cold open's sixty-nine years), each orbit turns from where it was to
+// where it has to be the shorter way round. Returns [day from, day to, how far between]; the shader turns the pieces'
+// orbits as of that day. (The pieces' spread along their orbit in a breakup's first days still follows the date.)
+const DRIFT_W = 16;
+const DRIFT_RATE = 2;
+const DRIFT_DT = 1 / 30;
+let DRIFT = null;
+const driftTables = () => {
+  const n = Math.ceil(TOUR_DURATION / DRIFT_DT) + 2;
+  // the running integral of the date, then its average over the window at each step
+  const sum = new Float64Array(n + 1);
+  let prev = shownDay(0);
+  for (let i = 1; i <= n; i += 1) {
+    const d = shownDay(i * DRIFT_DT);
+    sum[i] = sum[i - 1] + 0.5 * (prev + d) * DRIFT_DT;
+    prev = d;
+  }
+  const half = Math.round(DRIFT_W / 2 / DRIFT_DT);
+  const day = new Float64Array(n);
+  for (let i = 0; i < n; i += 1) {
+    const lo = Math.max(0, i - half);
+    const hi = Math.min(n, i + half);
+    day[i] = hi > lo ? (sum[hi] - sum[lo]) / ((hi - lo) * DRIFT_DT) : shownDay(i * DRIFT_DT);
+  }
+  // the stretches where even the averaged date runs fast, or turns round
+  const segs = [];
+  let seg = null;
+  for (let i = 1; i < n; i += 1) {
+    const rate = (day[i] - day[i - 1]) / DRIFT_DT;
+    const fast = Math.abs(rate) > DRIFT_RATE;
+    if (seg && (!fast || Math.sign(rate) !== seg.sign)) {
+      segs.push([seg.i0, i - 1]);
+      seg = null;
+    }
+    if (fast && !seg) seg = {i0: i - 1, sign: Math.sign(rate)};
+  }
+  if (seg) segs.push([seg.i0, n - 1]);
+  return {day, segs};
+};
+export function driftAt(t) {
+  if (!DRIFT) DRIFT = driftTables();
+  const {day, segs} = DRIFT;
+  const x = Math.max(0, Math.min(day.length - 1.001, t / DRIFT_DT));
+  const i = Math.floor(x);
+  const d = day[i] + (day[i + 1] - day[i]) * (x - i);
+  for (const [i0, i1] of segs) {
+    if (x < i0 || x > i1) continue;
+    const [d0, d1] = [day[i0], day[i1]];
+    return [d0, d1, Math.max(0, Math.min(1, (d - d0) / (d1 - d0)))];
+  }
+  return [d, d, 0];
+}
 
 // ------------------------------------------------------------ the camera
 const tmpN = new THREE.Vector3();
