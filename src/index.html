@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Everything we've ever launched</title>
+<meta name="description" content="Every object tracked in Earth orbit since Sputnik in 1957, %EVER% of them, on its orbit around a 3D Earth, with 3D models and specs of %SHIPS% rockets and spacecraft from Sputnik to Starship, and every launch since 1957. Data from Jonathan McDowell's GCAT.">
+<meta name="theme-color" content="#000000">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Everything we've ever launched">
+<meta property="og:description" content="%EVER% objects tracked in Earth orbit since 1957, on a 3D Earth, and %SHIPS% of the ships that put them there, from Sputnik to Starship. %NOW% are still up there.">
+<meta property="og:url" content="%PAGE_URL%">
+<meta property="og:image" content="%SITE_URL%card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A dark Earth wrapped in tens of thousands of glowing dots: satellites, Starlink, rocket stages and debris">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@protomotalab">
+<meta name="twitter:title" content="Everything we've ever launched">
+<meta name="twitter:description" content="%EVER% objects tracked in Earth orbit since 1957, on a 3D Earth, and %SHIPS% of the ships that put them there, from Sputnik to Starship. %NOW% are still up there.">
+<meta name="twitter:image" content="%SITE_URL%card.png">
+<link rel="canonical" href="%PAGE_URL%">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%231b2433'/%3E%3Cellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%23F58025' stroke-width='1.6' transform='rotate(-24 16 16)'/%3E%3C/svg%3E">
+<style>
+/*FONTS*/
+/*STYLE*/
+</style>
+%ANALYTICS%
+</head>
+<body>
+<header class="site-top">
+  <a class="site-brand" href="https://protomota.com/"><img src="%LOGO%" width="24" height="24" alt=""> Protomota</a>
+  <nav aria-label="Protomota">
+    <a href="https://protomota.com/experiments">Experiments</a>
+    <a href="https://protomota.com/#apps">Apps</a>
+    <a href="https://protomota.com/#about">About</a>
+    <a class="site-contact" href="https://protomota.com/#contact">Contact</a>
+  </nav>
+</header>
+
+<main class="lab">
+  <section class="stage" id="stage" aria-label="Every object in Earth orbit, on a 3D globe">
+    <canvas id="view" aria-hidden="true"></canvas>
+
+    <div class="hud">
+      <header class="title">
+        <p class="kicker">Protomota experiment</p>
+        <h1>Everything we've ever launched</h1>
+        <p class="lede">Every object tracked in Earth orbit since 1957, every launch that put them there, and %SHIPS% of the rockets and spacecraft that got us here. Drag to look around.</p>
+        <form class="find" id="find" role="search" autocomplete="off">
+          <div class="find-box">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5"></circle><path d="M10.8 10.8 14.5 14.5"></path></svg>
+            <input id="find-q" type="search" placeholder="Search %EVER% objects and %LAUNCHES% launches" aria-label="Search every object and launch" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="find-list" spellcheck="false" autocapitalize="off" enterkeyhint="search">
+          </div>
+          <ul class="find-list" id="find-list" role="listbox" aria-label="Search results" hidden></ul>
+        </form>
+      </header>
+
+      <div class="caption" id="caption" aria-live="polite">
+        <p class="cap-date"></p>
+        <h2 class="cap-title"></h2>
+        <p class="cap-body"></p>
+      </div>
+
+      <div class="readout">
+        <p class="date"><span id="date">Oct 4, 1957</span> <span class="time" id="time"></span></p>
+        <p class="totals"><span><b id="total">0</b> in orbit</span><span><b id="ever">0</b> tracked since 1957</span><span><b id="launches">0</b> launches</span></p>
+        <p class="latest" id="latest"><span class="latest-k">Latest launch</span> <span id="latest-t"></span></p>
+      </div>
+
+      <ul class="legend" id="legend" aria-label="Show or hide each kind of object"></ul>
+
+      <div class="transport">
+        <button class="play" id="play" type="button" data-state="pause" aria-label="Pause"><span aria-hidden="true"></span></button>
+        <div class="track" id="track">
+          <input id="timeline" type="range" aria-label="Date, from 1957 to today">
+          <div class="cadence" id="cadence" aria-hidden="true"><span class="cadence-k" id="cadence-k">Launches per year</span></div>
+          <div class="ticks" id="ticks"></div>
+          <div class="years" id="years" aria-hidden="true"></div>
+        </div>
+        <button class="pill" id="speed" type="button" hidden>1 year/s</button>
+        <button class="pill" id="tour" type="button">Skip the tour</button>
+        <button class="pill find-open" id="find-open" type="button" aria-label="Search every object and launch"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5"></circle><path d="M10.8 10.8 14.5 14.5"></path></svg>Search</button>
+      </div>
+    </div>
+
+    <aside class="plate" id="plate" aria-live="polite">
+      <div class="plate-main" id="plate-main">
+      <div class="plate-head">
+        <p class="plate-fig"><span id="plate-fig"></span><span id="plate-when"></span></p>
+        <h2 class="plate-title" id="plate-title"></h2>
+        <p class="plate-kind" id="plate-kind"></p>
+        <p class="plate-site" id="plate-site"></p>
+        <p class="plate-acts" id="plate-acts" hidden></p>
+      </div>
+      <div class="plate-view" id="plate-view">
+        <canvas id="ship" aria-hidden="true"></canvas>
+        <svg class="plate-dims" id="plate-dims" aria-hidden="true"></svg>
+        <p class="plate-hint" id="plate-hint">Drag to turn</p>
+        <button class="plate-big" id="plate-big" type="button" aria-label="Open the model in a large view" title="Large view"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9.5 2.5h4v4M6.5 13.5h-4v-4M13.5 2.5 9 7M2.5 13.5 7 9"/></svg></button>
+      </div>
+      <div class="plate-scroll">
+        <dl class="plate-specs" id="plate-specs"></dl>
+        <p class="plate-body" id="plate-body"></p>
+      </div>
+      </div>
+      <div class="plate-hold" id="plate-hold" hidden>
+        <button class="plate-step" id="plate-prev" type="button" aria-label="Previous milestone">‹</button>
+        <span class="plate-count" id="plate-count"></span>
+        <span class="plate-bar" id="plate-barwrap"><span id="plate-bar"></span></span>
+        <button class="plate-next" id="plate-next" type="button">Continue</button>
+        <button class="plate-step" id="plate-after" type="button" aria-label="Next milestone">›</button>
+      </div>
+      <button class="plate-close" id="plate-close" type="button" aria-label="Close">×</button>
+    </aside>
+
+    <div class="big" id="big" role="dialog" aria-modal="true" aria-labelledby="big-title" hidden>
+      <div class="big-view" id="big-view"></div>
+      <div class="big-info" id="big-info" tabindex="0" aria-label="About this model">
+        <p class="plate-fig"><span id="big-fig"></span><span id="big-when"></span></p>
+        <h2 class="big-title" id="big-title"></h2>
+        <p class="plate-kind" id="big-kind"></p>
+        <p class="plate-site" id="big-site"></p>
+        <dl class="plate-specs" id="big-specs"></dl>
+        <p class="plate-body" id="big-body"></p>
+      </div>
+      <p class="big-hint" id="big-hint">Drag to turn · scroll or pinch to zoom · right-drag or two fingers to move · double-click to reset</p>
+      <button class="big-close" id="big-close" type="button" aria-label="Close the large view">×</button>
+    </div>
+
+    <section class="lineup" id="lineup" aria-label="The rockets on this page, to scale">
+      <p class="kicker">To scale</p>
+      <h2>From Juno I to Starship</h2>
+      <div class="lineup-view" id="lineup-view">
+        <svg class="lineup-marks" id="lineup-marks" aria-hidden="true"></svg>
+      </div>
+    </section>
+
+    <p class="no-webgl" id="no-webgl" hidden>This globe needs WebGL. Turn on hardware acceleration in your browser settings and reload the page.</p>
+  </section>
+</main>
+
+<section class="notes" aria-label="How this was made">
+  <div>
+    <h2>How this was made</h2>
+    <p>Each dot is one object from GCAT, the catalog of everything launched into space kept by astronomer Jonathan McDowell. A dot appears on the day its object reached orbit, or broke away from another object, and disappears on the day it reentered or was destroyed. The counts come straight from those dates.</p>
+    <p>Each orbit has its real height, shape and tilt from the catalog: today's orbit for objects still up, and the orbit the catalog records for the rest. That is why the rings and shells look the way they do: the crowd in low orbit, the Starlink shells below 500 km, and the ring of geostationary satellites 35,786 km above the equator.</p>
+    <p>The catalog doesn't say which way each orbit faces or where along it each object is, so those are set at random, the same way on every visit. Objects from one launch share an orbit, satellites from one launch leave in a line and spread out over the following weeks, and the pieces of a breakup start where the broken object was. So the dots' exact positions are illustrative, while their heights, tilts and numbers are real.</p>
+    <p>Debris clouds spread out the way real ones do: pieces thrown onto slightly larger orbits fall behind, smaller ones get ahead, and Earth's equatorial bulge slowly turns each orbit. Motion along the orbits is sped up between 40 and 600 times: slowest while a ship is on screen, 110 times in the slow-motion moments.</p>
+    <p>Every launch since 1957 is a brief orange pulse at its launch site, red when it failed to reach orbit; the bars along the timeline count the launches that made it each year. They come from GCAT's launch log.</p>
+    <p>The Country switch in the legend recolors everything by who owns it: NASA, SpaceX, the rest of the US (military, other agencies, companies and universities), Russia and the Soviet Union, China, India, Japan, Europe (ESA, EUMETSAT and the European countries) and everyone else. It uses GCAT's owner and state codes; debris and rocket stages count for the owner of the object they came from. Launches count for the agency that launched them.</p>
+    <p>The search box finds any object in the catalog by name, catalog number or international ID, and any launch by its payloads, rocket or flight. A result opens its card: for an object, its orbit drawn to scale with Earth and a ring on it on the globe, with the date moved to when it reached orbit; for a launch, the rocket, the site and what it carried.</p>
+    <p>The ships are shown at true proportions, with their real heights and a scale bar in metres; the lineup at the end puts the rockets side by side at one scale. Dates and times are the launch, in UTC, and the marker on the globe is the launch site. While the timeline plays it stops at each milestone long enough to read its card; click any mark on the timeline to open one.</p>
+  </div>
+  <div>
+    <h2>What's left out</h2>
+    <p>Objects that left for deep space, spacecraft while docked to a station or carried by the Space Shuttle, and anything with no recorded orbit. The catalog is current to %UPDATED%.</p>
+    <h2>Credits</h2>
+    <p>Data from <a href="https://planet4589.org/space/gcat/" target="_blank" rel="noopener">GCAT</a> (J. McDowell, planet4589.org/space/gcat), licensed <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. Changes: filtered to objects in Earth orbit and to launches headed for orbit or beyond, and converted to compact files for this page. Coastlines from <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a>, public domain. 3D models of Juno I, Mercury, Gemini, Saturn V, Skylab, Apollo–Soyuz, the Shuttle orbiter, Mir, Hubble, the ISS, Landsat 1, Pioneer 10, the Viking lander, Voyager, Magellan, the Compton Gamma Ray Observatory, SOHO, Cassini–Huygens, Chandra, Rosetta, Kepler, Juno, the Parker Solar Probe, Perseverance, the James Webb Space Telescope, the Freedom 7 capsule, TDRS-1, Galileo, Ulysses, Stardust, Opportunity, Spitzer, MESSENGER, Dawn, OSIRIS-REx and InSight from <a href="https://github.com/nasa/NASA-3D-Resources" target="_blank" rel="noopener">NASA 3D Resources</a>, public domain; the rest were built for this page from published dimensions and photographs. Mission facts from each spacecraft's Wikipedia article and the NASA, ESA and news pages listed under <a href="#sources">Sources</a> below. An independent project, not affiliated with GCAT or Jonathan McDowell.</p>
+  </div>
+</section>
+
+%SOURCES%
+
+<footer class="site-foot">
+  <a class="site-brand" href="https://protomota.com/"><img src="%LOGO%" width="22" height="22" alt=""> Protomota</a>
+  <nav aria-label="Protomota links">
+    <a href="https://protomota.com/">Home</a>
+    <a href="https://protomota.com/experiments">Experiments</a>
+    <a href="https://protomota.com/#apps">Apps</a>
+    <a href="https://protomota.com/#contact">Contact</a>
+    <a href="https://protomota.com/privacy">Privacy</a>
+    <a href="https://protomota.com/terms">Terms</a>
+  </nav>
+  <span>© 2026 Protomota · Brad Dunlap</span>
+</footer>
+
+<script type="application/octet-stream" id="catalog">%CATALOG%</script>
+<script type="application/json" id="models">%MODELS%</script>
+<script>
+/*SCRIPT*/
+</script>
+</body>
+</html>

@@ -1,0 +1,538 @@
+[
+ {
+  "key": "sputnik1",
+  "text": "Since 1957, we have put more than sixty-nine thousand objects into orbit around the Earth. This is every one of them, one dot each, in the order they went up. It begins on October fourth, 1957, with a polished aluminum sphere fifty-eight centimeters across. Sputnik did little more than beep. But anyone with a shortwave radio could hear it, and the space age had begun."
+ },
+ {
+  "key": "sputnik2",
+  "text": "One month later, Sputnik 2 carried the first animal into orbit: Laika, a stray dog from the streets of Moscow. There was no way to bring her home, and the cabin overheated. She died within hours, a fact the world only learned in 2002."
+ },
+ {
+  "key": "explorer1",
+  "text": "America answered in February 1958. Explorer 1 rode a Juno I rocket from Cape Canaveral, and its Geiger counter found something no one expected. Earth is wrapped in belts of trapped radiation. We call them the Van Allen belts, after the scientist whose instrument found them."
+ },
+ {
+  "key": "vanguard1",
+  "text": "Vanguard 1 was the size of a grapefruit, and the first satellite to run on sunlight. Tracking it showed that the Earth is slightly pear-shaped. Its radio fell silent in 1964, but the satellite is still up there. It is the oldest human-made object in orbit, and it should stay there for centuries."
+ },
+ {
+  "key": "luna2",
+  "text": "In September 1959, the Soviet Luna 2 became the first human-made object to reach another world. It flew straight at the Moon, and struck it a day and a half after launch. On the way, it released a glowing cloud of sodium gas, six hundred and fifty kilometers wide."
+ },
+ {
+  "key": "luna3",
+  "text": "A month later, Luna 3 swung behind the Moon and photographed its far side, the side that never faces Earth. It developed the film on board, scanned it, and radioed the pictures home. The film itself had come from American spy balloons that came down over the Soviet Union."
+ },
+ {
+  "key": "tiros1",
+  "text": "In April 1960, TIROS-1 turned two television cameras back toward the planet. It was the first successful weather satellite. In two and a half months it sent down nearly twenty-three thousand pictures of clouds, and every weather satellite since descends from it.",
+  "say": "In April 1960, Tiros One turned two television cameras back toward the planet. It was the first successful weather satellite. In two and a half months it sent down nearly twenty-three thousand pictures of clouds, and every weather satellite since descends from it."
+ },
+ {
+  "key": "echo1",
+  "text": "Echo 1 was a balloon thirty meters across, folded into a canister and inflated in orbit. It carried no radio at all. Engineers simply bounced phone calls, music and television off its mirror-like skin. It was bright enough to see with the naked eye, and millions of people watched it cross the night sky."
+ },
+ {
+  "key": "vostok1",
+  "text": "On April twelfth, 1961, Yuri Gagarin became the first human in space. He circled the Earth once, in a hundred and eight minutes. His capsule had no way to land softly, so seven kilometers up, he ejected, and came down under his own parachute."
+ },
+ {
+  "key": "freedom7",
+  "text": "On May fifth, 1961, three weeks after Gagarin, Alan Shepard became the first American in space. Freedom 7 flew a fifteen-minute arc out over the Atlantic and back, and Shepard was the first to steer a spacecraft by hand. The capsule came back in such good shape that engineers said it could have flown again."
+ },
+ {
+  "key": "friendship7",
+  "text": "Ten months later, John Glenn became the first American to orbit the Earth. During the flight, a sensor warned that his heat shield had come loose, so he came home with his retro-rocket pack still strapped on, to hold the shield in place. The warning turned out to be a faulty switch."
+ },
+ {
+  "key": "telstar1",
+  "text": "Telstar 1, built by AT&T, carried the first live television pictures across the Atlantic. But the day before it launched, the United States had set off a nuclear bomb high above the Pacific. Radiation from that test slowly wore out Telstar's electronics, and it went silent within eight months. It is still in orbit.",
+  "say": "Telstar 1, built by A T and T, carried the first live television pictures across the Atlantic. But the day before it launched, the United States had set off a nuclear bomb high above the Pacific. Radiation from that test slowly wore out Telstar's electronics, and it went silent within eight months. It is still in orbit."
+ },
+ {
+  "key": "mariner2",
+  "text": "Mariner 2 was the first spacecraft to report back from another planet. It flew past Venus in December 1962. It carried no camera, but its instruments showed that beneath the clouds, Venus is scorching hot, around five hundred degrees Celsius. It is still circling the Sun."
+ },
+ {
+  "key": "vostok6",
+  "text": "In June 1963, Valentina Tereshkova became the first woman in space. She flew alone for almost three days, longer than all six Mercury flights put together. No other woman would fly in space for nineteen years."
+ },
+ {
+  "key": "syncom3",
+  "text": "Syncom 3 was the first satellite in geostationary orbit. Nearly thirty-six thousand kilometers above the equator, it circles once a day, exactly as fast as the Earth turns, so from the ground it seems to hang still in the sky. Seven weeks after launch, it carried live television of the Tokyo Olympics across the Pacific."
+ },
+ {
+  "key": "voskhod2",
+  "text": "In March 1965, Alexei Leonov left his spacecraft for the first walk in space. In the vacuum, his suit ballooned so stiff that he couldn't get back in, until he let some of its air out. The crew then landed far off course, in snowy forest, and spent two nights there before rescuers reached them."
+ },
+ {
+  "key": "earlybird",
+  "text": "Early Bird, also called Intelsat 1, was the first commercial communications satellite in geostationary orbit. For the first time, Europe and North America could share calls and live television at any hour. It retired in 1969, but was woken briefly for the Apollo 11 landing."
+ },
+ {
+  "key": "luna9",
+  "text": "In February 1966, the Soviet Luna 9 made the first soft landing on another world. An airbag cushioned the capsule, then four petals opened to set it upright. Astronomers at Jodrell Bank in England decoded its pictures, and a British newspaper printed them before Moscow did."
+ },
+ {
+  "key": "gemini8",
+  "text": "Gemini 8 made the first docking of two spacecraft in orbit. Minutes later, a stuck thruster set the joined craft tumbling at nearly one turn a second. The commander, Neil Armstrong, undocked, regained control, and brought Gemini 8 home early. Three years later, he would walk on the Moon."
+ },
+ {
+  "key": "soyuz1",
+  "text": "Soyuz 1 was the first flight of the Soyuz spacecraft, and it ended in the first death during a spaceflight. On the way home, its parachutes failed, and Vladimir Komarov was killed on impact. Redesigned, Soyuz has flown ever since: more than a hundred and forty times, longer than any other crewed spacecraft."
+ },
+ {
+  "key": "apollo11",
+  "text": "This is the Saturn V, a hundred and ten meters tall. On July sixteenth, 1969, it launched Apollo 11. Four days later, Neil Armstrong and Buzz Aldrin landed on the Moon, while Michael Collins waited in orbit above. The Saturn V flew thirteen times, and never lost a payload."
+ },
+ {
+  "key": "ohsumi",
+  "text": "In February 1970, Japan became the fourth country to reach orbit on its own rocket, after the Soviet Union, the United States and France. It took five tries. Ohsumi's batteries lasted only hours, but the little satellite stayed up for thirty-three years."
+ },
+ {
+  "key": "dfh1",
+  "text": "Two months later, China became the fifth. Dong Fang Hong 1, The East Is Red, weighed more than the first satellites of the four countries before it, put together. For twenty days, it broadcast the song it was named after. It is still in orbit."
+ },
+ {
+  "key": "venera7",
+  "text": "Venera 7 left for Venus in August 1970. That December, it became the first spacecraft to send data from the surface of another planet. Its parachute failed, and it hit the ground hard, into heat of about four hundred and seventy-five degrees Celsius and ninety times Earth's air pressure. Its signal was so faint that the surface data was only found later, in the recordings."
+ },
+ {
+  "key": "lunokhod1",
+  "text": "That November, Lunokhod 1 landed on the Moon, the first robot to rove another world. Drivers on Earth steered its eight wheels from television pictures that took seconds to arrive. Over ten months it drove ten and a half kilometers, and the laser reflector it carries is still used to measure the distance to the Moon."
+ },
+ {
+  "key": "salyut1",
+  "text": "Salyut 1 was the first space station. Its second crew lived aboard for twenty-three days, a record. But on the way home, a valve opened as their capsule separated. The air rushed out, and Georgy Dobrovolsky, Viktor Patsayev and Vladislav Volkov died. They are still the only people to have died in space."
+ },
+ {
+  "key": "mars3",
+  "text": "In December 1971, the Soviet Mars 3 made the first soft landing on Mars. It came down in a dust storm, and fell silent a hundred and ten seconds later, after sending back part of a single gray picture. It carried a small rover on skis, but no one knows if it ever left the lander."
+ },
+ {
+  "key": "pioneer10",
+  "text": "Pioneer 10 was the first spacecraft to cross the asteroid belt and fly past Jupiter. It carries a gold-anodized plaque showing who sent it, and from where. Its last signal came in 2003, from twelve billion kilometers away. It is still coasting out of the Solar System, toward the star Aldebaran."
+ },
+ {
+  "key": "landsat1",
+  "text": "Landsat 1 was the first satellite built just to watch Earth's land. Its scanner photographed crops, forests, cities and glaciers in four colors, one of them infrared. There has been a Landsat watching the planet ever since."
+ },
+ {
+  "key": "skylab",
+  "text": "Skylab, America's first space station, was built inside a spare Saturn V third stage. It lost a solar wing and its sun shield on the way up, and the first crew rigged a parasol to keep it cool. Three crews lived aboard. In 1979 it fell back to Earth, scattering pieces across Western Australia."
+ },
+ {
+  "key": "aryabhata",
+  "text": "Aryabhata was India's first satellite, named after a fifth-century Indian astronomer. It went up on a Soviet rocket. Five years later, India reached orbit on a rocket of its own."
+ },
+ {
+  "key": "astp",
+  "text": "In July 1975, at the height of the Cold War, an American Apollo and a Soviet Soyuz met in orbit. Commanders Thomas Stafford and Alexei Leonov shook hands through the open hatch. It was the last flight of an Apollo spacecraft."
+ },
+ {
+  "key": "viking1",
+  "text": "Viking 1 was the first spacecraft to land on Mars and keep working. Its orbiter mapped the planet, while the lander sent the first pictures from the surface and tested the soil for life, with results that are still argued over. The lander kept working for more than six years."
+ },
+ {
+  "key": "voyager1",
+  "text": "Voyager 1 flew past Jupiter and Saturn. Then, in 1990, it turned around and photographed the Earth as a pale blue dot, from six billion kilometers away. In 2012, it became the first spacecraft to reach interstellar space. It is the farthest object we have ever made, and it is still sending data home."
+ },
+ {
+  "key": "navstar1",
+  "text": "Navstar 1 was the first GPS satellite. Each one carries atomic clocks and broadcasts the time, and a receiver that can hear four of them can work out where it is. The full set of twenty-four was ready in 1995. Today, billions of phones listen to them.",
+  "say": "Navstar 1 was the first G P S satellite. Each one carries atomic clocks and broadcasts the time, and a receiver that can hear four of them can work out where it is. The full set of twenty-four was ready in 1995. Today, billions of phones listen to them."
+ },
+ {
+  "key": "ariane1",
+  "text": "On Christmas Eve, 1979, Europe launched a rocket of its own. Ariane 1 was built so that Europe would not need anyone else to launch its satellites, and it was the first rocket designed mainly for commercial customers. Its successors still fly from French Guiana."
+ },
+ {
+  "key": "sts1",
+  "text": "On April twelfth, 1981, twenty years to the day after Gagarin, Columbia launched like a rocket and came home like a glider: the first reusable spaceship. Five orbiters flew a hundred and thirty-five missions. Two of them, Challenger and Columbia, were lost, with fourteen crew."
+ },
+ {
+  "key": "tdrs1",
+  "text": "TDRS-1 was the first of NASA's relay satellites. From high above the equator, they let spacecraft in low orbit talk to the ground almost all the time, not only when passing over a station. Its booster went out of control, and controllers spent nearly three months nudging it into place with its small thrusters. It worked for twenty-six years.",
+  "say": "T D R S One was the first of NASA's relay satellites. From high above the equator, they let spacecraft in low orbit talk to the ground almost all the time, not only when passing over a station. Its booster went out of control, and controllers spent nearly three months nudging it into place with its small thrusters. It worked for twenty-six years."
+ },
+ {
+  "key": "mir",
+  "text": "Mir was the first space station assembled in orbit from separate modules, added one by one over ten years. Valeri Polyakov stayed aboard for four hundred and thirty-seven days in a row, still the record for a single flight. After fifteen years, Mir was brought down into the Pacific."
+ },
+ {
+  "key": "buran",
+  "text": "In November 1988, the Soviet space shuttle Buran made its first and only flight, with no one on board. Its computers flew two orbits and landed it on a runway at Baikonur, even choosing an extra turn on the way in because of gusty winds. The program was cancelled, and in 2002, Buran was destroyed when the roof of its hangar collapsed.",
+  "say": "In November 1988, the Soviet space shuttle Boo-rahn made its first and only flight, with no one on board. Its computers flew two orbits and landed it on a runway at Baikonur, even choosing an extra turn on the way in because of gusty winds. The program was cancelled, and in 2002, Boo-rahn was destroyed when the roof of its hangar collapsed."
+ },
+ {
+  "key": "magellan",
+  "text": "Magellan was the first planetary probe launched from the Space Shuttle. Partly built from spare parts of other missions, it looked through the thick clouds of Venus with radar, and mapped almost the whole planet: volcanoes, lava plains, and surprisingly few craters."
+ },
+ {
+  "key": "galileo",
+  "text": "Galileo was the first spacecraft to orbit an outer planet. Its big antenna never opened, so it sent everything home through a small one. In December 1995, its probe dived into Jupiter's clouds. At the end, Galileo itself was flown into Jupiter, so it could never contaminate the moon Europa."
+ },
+ {
+  "key": "hubble",
+  "text": "In April 1990, the shuttle Discovery carried the Hubble Space Telescope above the blur of the atmosphere. Its main mirror turned out to be ground very slightly wrong, and astronauts fitted corrective optics in 1993. Shuttle crews serviced it five times. Thirty-six years later, it is still observing."
+ },
+ {
+  "key": "ulysses",
+  "text": "Ulysses studied the Sun from above its poles. No rocket could tip its orbit that far, so it flew out to Jupiter first, and used Jupiter's gravity to swing up, out of the plane of the planets. It passed over the Sun's poles three times."
+ },
+ {
+  "key": "cgro",
+  "text": "The Compton Gamma Ray Observatory was one of the heaviest science satellites ever flown. Over nine years, it recorded thousands of gamma-ray bursts, and found that they come evenly from every direction, the first strong clue that they happen far beyond our galaxy."
+ },
+ {
+  "key": "soho",
+  "text": "SOHO has watched the Sun for three decades, from a point one and a half million kilometers toward it, and many space-weather warnings come from it. Amateurs searching its pictures have found more than five thousand comets, more than any other telescope.",
+  "say": "Soho has watched the Sun for three decades, from a point one and a half million kilometers toward it, and many space-weather warnings come from it. Amateurs searching its pictures have found more than five thousand comets, more than any other telescope."
+ },
+ {
+  "key": "cassini",
+  "text": "Cassini spent thirteen years at Saturn. Its European probe, Huygens, landed on the moon Titan, the farthest landing ever made. Cassini found geysers of water on Enceladus, and seas of methane on Titan. Low on fuel, it was flown into Saturn in 2017, so it could never contaminate those moons.",
+  "say": "Cassini spent thirteen years at Saturn. Its European probe, Hoygens, landed on the moon Titan, the farthest landing ever made. Cassini found geysers of water on Enceladus, and seas of methane on Titan. Low on fuel, it was flown into Saturn in 2017, so it could never contaminate those moons."
+ },
+ {
+  "key": "iss",
+  "text": "In November 1998, a Russian rocket launched Zarya, the first piece of the International Space Station. Built by the United States, Russia, Europe, Japan and Canada, the station has had people aboard every day since November 2000, longer than any other spacecraft."
+ },
+ {
+  "key": "stardust",
+  "text": "Stardust flew through the dust around comet Wild 2, and caught grains of it in a collector the size of a tennis racket. Its capsule came home in 2006 at twelve point nine kilometers a second, the fastest reentry of any human-made object. In the dust, scientists found glycine, an amino acid.",
+  "say": "Stardust flew through the dust around comet Vilt 2, and caught grains of it in a collector the size of a tennis racket. Its capsule came home in 2006 at twelve point nine kilometers a second, the fastest reentry of any human-made object. In the dust, scientists found glycine, an amino acid."
+ },
+ {
+  "key": "chandra",
+  "text": "The Chandra X-ray Observatory sees the X-rays given off by black holes, exploding stars and clusters of galaxies. It was the heaviest payload the Shuttle ever launched, on the first Shuttle flight commanded by a woman, Eileen Collins. Its long orbit takes it a third of the way to the Moon."
+ },
+ {
+  "key": "opportunity",
+  "text": "Opportunity was built to last three months on Mars. It kept exploring for more than fourteen years, found rocks that formed in water, and drove more than a marathon. In 2018, a planet-wide dust storm covered its solar panels, and it never woke up."
+ },
+ {
+  "key": "spitzer",
+  "text": "Spitzer, the last of NASA's four Great Observatories, saw the universe in infrared: the heat glow of dust, newborn stars and distant galaxies. It was the first spacecraft to trail the Earth around the Sun, away from Earth's heat. When its coolant ran out, it kept working, warm, for another ten years."
+ },
+ {
+  "key": "shenzhou5",
+  "text": "In October 2003, Yang Liwei made China the third country to send a person into orbit on its own rocket. His Shenzhou spacecraft looks like a Soyuz, only larger. Today, China runs a space station of its own.",
+  "say": "In October 2003, Yang Lee-way made China the third country to send a person into orbit on its own rocket. His Shen-joe spacecraft looks like a Soyuz, only larger. Today, China runs a space station of its own."
+ },
+ {
+  "key": "rosetta",
+  "text": "After ten years and four planetary flybys, Rosetta caught up with a comet and flew alongside it for two years. Its lander, Philae, made the first landing on a comet, bouncing twice before it came to rest in a shadow. At the end of the mission, Rosetta was set down on the comet too.",
+  "say": "After ten years and four planetary flybys, Rosetta caught up with a comet and flew alongside it for two years. Its lander, Fee-lay, made the first landing on a comet, bouncing twice before it came to rest in a shadow. At the end of the mission, Rosetta was set down on the comet too."
+ },
+ {
+  "key": "messenger",
+  "text": "MESSENGER was the first spacecraft to orbit Mercury. Getting there took six planetary flybys and six and a half years, to shed enough speed. It confirmed that there is water ice in shadowed craters at Mercury's north pole. Out of fuel, it was crashed into the planet in 2015.",
+  "say": "Messenger was the first spacecraft to orbit Mercury. Getting there took six planetary flybys and six and a half years, to shed enough speed. It confirmed that there is water ice in shadowed craters at Mercury's north pole. Out of fuel, it was crashed into the planet in 2015."
+ },
+ {
+  "key": "fengyun",
+  "text": "January 2007. China tests an anti-satellite missile on one of its own retired weather satellites, Fengyun-1C, more than eight hundred kilometers up. The impact makes the largest debris cloud ever recorded: more than three and a half thousand pieces big enough to track. At that height there is almost no air to slow them down. Nearly twenty years later, more than two thousand three hundred are still up there.",
+  "say": "January 2007. China tests an anti-satellite missile on one of its own retired weather satellites, Fung-yoon one C, more than eight hundred kilometers up. The impact makes the largest debris cloud ever recorded: more than three and a half thousand pieces big enough to track. At that height there is almost no air to slow them down. Nearly twenty years later, more than two thousand three hundred are still up there."
+ },
+ {
+  "key": "dawn",
+  "text": "Dawn was the first spacecraft to orbit two worlds beyond the Earth: the giant asteroid Vesta, and the dwarf planet Ceres. Its ion engines were so gentle that at full power they took four days to reach a hundred kilometers an hour. But they never stopped. Out of fuel, Dawn still circles Ceres."
+ },
+ {
+  "key": "falcon1",
+  "text": "In September 2008, on its fourth try, SpaceX's Falcon 1 became the first privately developed liquid-fuel rocket to reach orbit. It launched from a tiny island in the Pacific, carrying a dummy satellite. The first three launches had failed. Falcon 1 flew only once more, and made way for Falcon 9."
+ },
+ {
+  "key": "iridium",
+  "text": "February 2009. For the first time, two whole satellites collide by accident. A working Iridium phone satellite and a dead Russian military satellite meet almost at right angles, at nearly twelve kilometers a second. Nobody was steering Kosmos 2251, and the close pass had not been flagged. Since then, operators are warned of close approaches, and move their satellites out of the way.",
+  "say": "February 2009. For the first time, two whole satellites collide by accident. A working Iridium phone satellite and a dead Russian military satellite meet almost at right angles, at nearly twelve kilometers a second. Nobody was steering Kosmos twenty-two fifty-one, and the close pass had not been flagged. Since then, operators are warned of close approaches, and move their satellites out of the way."
+ },
+ {
+  "key": "kepler",
+  "text": "Kepler stared at one patch of sky for four years, watching a hundred and fifty thousand stars for the tiny dip in light when a planet passes in front. It confirmed more than twenty-six hundred planets, and showed that most stars have them, and that many are about the size of Earth."
+ },
+ {
+  "key": "falcon9",
+  "text": "Falcon 9 first flew in June 2010. Since December 2015, its first stage has flown back and landed upright, so the same booster can launch again and again. One booster has flown thirty-six times, and Falcon 9 has launched more than six hundred and seventy times."
+ },
+ {
+  "key": "juno",
+  "text": "Juno was the first spacecraft to reach Jupiter on solar power, with wings large enough to work at five times Earth's distance from the Sun. Its electronics ride in a titanium vault, shielded from Jupiter's radiation. It also carried three small LEGO figures."
+ },
+ {
+  "key": "dragonc2",
+  "text": "In May 2012, Dragon became the first commercial spacecraft to visit the International Space Station. Astronaut Don Pettit caught it with the station's robot arm. It was the first American spacecraft at the station since the Shuttle retired, and it led to twenty Dragon supply runs, and to Crew Dragon."
+ },
+ {
+  "key": "mom",
+  "text": "In 2014, India's Mangalyaan reached Mars orbit on its first try, making India the first Asian country to get there. It was built quickly and cheaply, for about seventy-three million dollars. Planned to last six months, it worked for seven and a half years.",
+  "say": "In 2014, India's Mungal-yaan reached Mars orbit on its first try, making India the first Asian country to get there. It was built quickly and cheaply, for about seventy-three million dollars. Planned to last six months, it worked for seven and a half years."
+ },
+ {
+  "key": "hayabusa2",
+  "text": "Japan's Hayabusa2 blasted a crater in the asteroid Ryugu with a copper projectile, then touched down to collect fresh rock from below the surface. Its capsule landed in the Australian outback with five point four grams of the asteroid. The spacecraft flew on, toward another asteroid it should reach in 2031.",
+  "say": "Japan's Hayabusa 2 blasted a crater in the asteroid Ryugu with a copper projectile, then touched down to collect fresh rock from below the surface. Its capsule landed in the Australian outback with five point four grams of the asteroid. The spacecraft flew on, toward another asteroid it should reach in 2031."
+ },
+ {
+  "key": "osirisrex",
+  "text": "OSIRIS-REx orbited the asteroid Bennu just one point seven five kilometers up, closer than any spacecraft has orbited anything. It touched the surface to grab a sample, and in 2023 its capsule landed in Utah with a hundred and twenty-one grams of asteroid. In it were fourteen of the twenty amino acids that make up proteins.",
+  "say": "Osiris Rex orbited the asteroid Bennu just one point seven five kilometers up, closer than any spacecraft has orbited anything. It touched the surface to grab a sample, and in 2023 its capsule landed in Utah with a hundred and twenty-one grams of asteroid. In it were fourteen of the twenty amino acids that make up proteins."
+ },
+ {
+  "key": "falconheavy",
+  "text": "Falcon Heavy is three Falcon 9 first stages side by side. On its first flight, it sent a red Tesla Roadster into orbit around the Sun, and its two side boosters flew back and landed next to each other at Cape Canaveral."
+ },
+ {
+  "key": "insight",
+  "text": "InSight listened to Mars. Its seismometer recorded marsquakes, showing that the planet's interior is still active, and measured its core, about half the size of Earth's. Dust slowly covered its solar panels, and it fell silent in December 2022.",
+  "say": "In-Sight listened to Mars. Its seismometer recorded marsquakes, showing that the planet's interior is still active, and measured its core, about half the size of Earth's. Dust slowly covered its solar panels, and it fell silent in December 2022."
+ },
+ {
+  "key": "parker",
+  "text": "The Parker Solar Probe is the first spacecraft to fly through the Sun's outer atmosphere. Its carbon heat shield keeps the instruments behind it cool. At its closest, about six million kilometers from the Sun, it travels at six hundred and ninety thousand kilometers an hour, the fastest object people have ever made."
+ },
+ {
+  "key": "change4",
+  "text": "In January 2019, China's Chang'e 4 made the first landing on the far side of the Moon. Because the Moon blocks any direct radio link with Earth, China first placed a relay satellite beyond it. The rover, Yutu-2, drove for years across the floor of the Moon's largest and oldest crater.",
+  "say": "In January 2019, China's Chahng-uh 4 made the first landing on the far side of the Moon. Because the Moon blocks any direct radio link with Earth, China first placed a relay satellite beyond it. The rover, Yoo-too 2, drove for years across the floor of the Moon's largest and oldest crater."
+ },
+ {
+  "key": "starlink",
+  "text": "In May 2019, SpaceX launched its first sixty Starlink satellites, flat-packed and stacked on a single rocket. Watch them string out along their orbit. Today, more than eleven thousand are in orbit, about a third of everything up there."
+ },
+ {
+  "key": "crewdragon",
+  "text": "In May 2020, Crew Dragon became the first spacecraft built by a private company to carry astronauts into orbit, and the first crew launch from American soil since the last Shuttle flew, in 2011. Its capsules land under parachutes at sea, and fly again."
+ },
+ {
+  "key": "tianwen1",
+  "text": "China's first Mars mission, Tianwen-1, sent an orbiter, a lander and a rover together. In May 2021, China became the first country to land and drive on Mars at its first attempt. The rover, Zhurong, drove almost two kilometers, then went into hibernation for the Martian winter, and never woke up.",
+  "say": "China's first Mars mission, Tyen-wen One, sent an orbiter, a lander and a rover together. In May 2021, China became the first country to land and drive on Mars at its first attempt. The rover, Joo-rong, drove almost two kilometers, then went into hibernation for the Martian winter, and never woke up."
+ },
+ {
+  "key": "perseverance",
+  "text": "Perseverance landed in Jezero Crater on Mars in February 2021, to look for signs of ancient life in an old river delta. It carried Ingenuity, a small helicopter that made the first powered flight on another planet, and flew seventy-two times. The rover seals rock samples in tubes, for a future mission to bring home."
+ },
+ {
+  "key": "tianhe",
+  "text": "Tianhe is the core of Tiangong, China's own space station. Two laboratory modules joined it in 2022, and crews of three have lived aboard ever since. The rocket's twenty-one-ton core stage reached orbit too, and fell back uncontrolled ten days later.",
+  "say": "Tyen-huh is the core of Tyen-gong, China's own space station. Two laboratory modules joined it in 2022, and crews of three have lived aboard ever since. The rocket's twenty-one-ton core stage reached orbit too, and fell back uncontrolled ten days later."
+ },
+ {
+  "key": "kosmos1408",
+  "text": "November 2021. Russia destroys one of its own dead satellites with a missile. Hours later, the seven people aboard the International Space Station shelter in their capsules as the station passes near the cloud. This time the debris was low enough to feel the thin upper air, and almost all of it fell back within three years.",
+  "say": "November 2021. Russia destroys one of its own dead satellites with a missile. Hours later, the seven people aboard the International Space Station shelter in their capsules as the station passes near the cloud. This time the debris was low enough to feel the thin upper air, and almost all of it fell back within three years."
+ },
+ {
+  "key": "dart",
+  "text": "DART was the first test of defending the Earth by knocking an asteroid off course. In September 2022, it steered itself head-on into Dimorphos, a moonlet a hundred and sixty meters wide. The hit shortened Dimorphos's orbit by thirty-two minutes. Seventy-three seconds would have counted as a success.",
+  "say": "Dart was the first test of defending the Earth by knocking an asteroid off course. In September 2022, it steered itself head-on into Dye-morphos, a moonlet a hundred and sixty meters wide. The hit shortened Dye-morphos's orbit by thirty-two minutes. Seventy-three seconds would have counted as a success."
+ },
+ {
+  "key": "jwst",
+  "text": "On Christmas Day 2021, the James Webb Space Telescope launched folded inside an Ariane 5, and unfolded on its way to a point one and a half million kilometers from Earth. Its gold mirror is six and a half meters across. It sees galaxies from the first few hundred million years after the Big Bang."
+ },
+ {
+  "key": "starlinkv2",
+  "text": "Starlink's second generation is more than twice as heavy as the first, with about four times the capacity, and lasers that link each satellite to its neighbors. Since 2024, some of them also work as cell towers in orbit, sending texts straight to ordinary phones."
+ },
+ {
+  "key": "chandrayaan3",
+  "text": "In August 2023, India's Chandrayaan-3 landed near the Moon's south pole, where ice may hide in shadowed craters. India became the fourth country to land softly on the Moon, and the first to land near its south pole. Its little rover, Pragyan, drove about a hundred meters before the long lunar night.",
+  "say": "In August 2023, India's Chundra-yaan 3 landed near the Moon's south pole, where ice may hide in shadowed craters. India became the fourth country to land softly on the Moon, and the first to land near its south pole. Its little rover, Prag-yaan, drove about a hundred meters before the long lunar night."
+ },
+ {
+  "key": "newglenn",
+  "text": "In January 2025, Blue Origin's New Glenn, named after John Glenn, reached orbit on its first flight. On its second, its booster landed on a ship at sea, while the rocket sent two NASA probes on their way to Mars."
+ },
+ {
+  "key": "kuiper",
+  "text": "Amazon's answer to Starlink began as Project Kuiper, and is now called Amazon Leo. Its first twenty-seven production satellites went up in April 2025, on an Atlas V. More than three thousand are planned.",
+  "say": "Amazon's answer to Starlink began as Project Kyper, and is now called Amazon Leo. Its first twenty-seven production satellites went up in April 2025, on an Atlas Five. More than three thousand are planned."
+ },
+ {
+  "key": "artemis2",
+  "text": "In April 2026, four astronauts became the first people to fly to the Moon since 1972. Reid Wiseman, Victor Glover, Christina Koch and Jeremy Hansen looped around the far side of the Moon in an Orion capsule, and went farther from Earth than anyone ever had.",
+  "say": "In April 2026, four astronauts became the first people to fly to the Moon since 1972. Reid Wiseman, Victor Glover, Christina Cook and Jeremy Hansen looped around the far side of the Moon in an Orion capsule, and went farther from Earth than anyone ever had."
+ },
+ {
+  "key": "starship",
+  "text": "And in September 2026, on its fourteenth flight, Starship reached orbit for the first time. It is the largest and most powerful rocket ever flown, built from stainless steel, and its booster can be caught out of the air by the arms of its launch tower."
+ },
+ {
+  "key": "today",
+  "text": "This is where we are now. Almost thirty-four thousand objects are in orbit. More than eleven thousand of them are Starlink satellites."
+ },
+ {
+  "key": "junk",
+  "text": "And a great deal of it is junk. More than fourteen thousand of the objects in orbit, over four in every ten, are spent rocket stages, parts thrown off during launches, and debris from explosions and collisions. Many of the satellites are dead too. And these are only the pieces big enough to track. Below that, there are about one and a half million fragments between one and ten centimeters across, and at these speeds, even a one-centimeter fragment can disable a satellite. Low pieces fall back within a few years. Above about eight hundred kilometers, they can stay up for centuries.",
+  "say": "And a great deal of it is junk. More than fourteen thousand of the objects in orbit, over four in every ten, are spent rocket stages, parts thrown off during launches, and debris from explosions and collisions. Many of the satellites are dead too. And these are only the pieces big enough to track. Below that, there are about one and a half million fragments between one and ten centimeters across, and at these speeds, even a one-centimeter fragment can disable a satellite. Low pieces fall back within a few years. Above about eight hundred kilometers, they can stay up for centuries."
+ },
+ {
+  "key": "who",
+  "text": "Who put it all there? For decades, the Soviet Union and then Russia launched more rockets than anyone: more than three thousand one hundred in all. Now SpaceX launches more than the rest of the world put together, a hundred and sixty-eight times in 2025, to China's ninety, and it owns a third of everything in orbit. China is second, and climbing, and India, Japan and Europe all fly rockets of their own."
+ },
+ {
+  "key": "lineup",
+  "text": "Here they are, side by side, at one scale. From the little Juno I that launched Explorer 1, past the Saturn V that took Apollo to the Moon, to Starship, the biggest rocket ever flown. And this is what they carried, in the order they flew. First Sputnik, then Explorer and Vanguard, and the first probes to the Moon. Then the first people in orbit, the first probe to another planet, the first walk in space, and the first satellites to carry television across oceans. Apollo 11, and footprints on the Moon. Through the seventies, the first space stations, landers on Mars, and Voyager 1, now farther away than anything else we have built. Then the Space Shuttle, Mir, and Hubble, and the International Space Station, where people have lived without a break since 2000. This century brought rovers on Mars, China's first astronaut, a landing on a comet, India at Mars on its first try, and rockets that land and fly again. And now, thousands of Starlink satellites, the James Webb telescope, people flying around the Moon again, and Starship. Sixty-nine years. Nearly seven thousand launches. This is everything we've ever launched.",
+  "say": "Here they are, side by side, at one scale. From the little Juno One that launched Explorer One, past the Saturn Five that took Apollo to the Moon, to Starship, the biggest rocket ever flown. And this is what they carried, in the order they flew. First Sputnik, then Explorer and Vanguard, and the first probes to the Moon. Then the first people in orbit, the first probe to another planet, the first walk in space, and the first satellites to carry television across oceans. Apollo Eleven, and footprints on the Moon. Through the seventies, the first space stations, landers on Mars, and Voyager One, now farther away than anything else we have built. Then the Space Shuttle, Mir, and Hubble, and the International Space Station, where people have lived without a break since two thousand. This century brought rovers on Mars, China's first astronaut, a landing on a comet, India at Mars on its first try, and rockets that land and fly again. And now, thousands of Starlink satellites, the James Webb telescope, people flying around the Moon again, and Starship. Sixty-nine years. Nearly seven thousand launches. This is everything we've ever launched.",
+  "marks": [
+   [
+    "Here they are",
+    "rise",
+    0
+   ],
+   [
+    "Saturn Five",
+    "rise",
+    2
+   ],
+   [
+    "Starship, the biggest",
+    "rise",
+    10
+   ],
+   [
+    "And this is what",
+    "carry",
+    0
+   ],
+   [
+    "First Sputnik",
+    "pass",
+    0
+   ],
+   [
+    "Explorer and",
+    "pass",
+    2
+   ],
+   [
+    "Vanguard",
+    "pass",
+    3
+   ],
+   [
+    "the first probes",
+    "pass",
+    4
+   ],
+   [
+    "the first people",
+    "pass",
+    8
+   ],
+   [
+    "the first probe to another",
+    "pass",
+    12
+   ],
+   [
+    "the first walk",
+    "pass",
+    15
+   ],
+   [
+    "the first satellites to carry",
+    "pass",
+    16
+   ],
+   [
+    "Apollo Eleven",
+    "pass",
+    20
+   ],
+   [
+    "the first space stations",
+    "pass",
+    25
+   ],
+   [
+    "landers on Mars",
+    "pass",
+    32
+   ],
+   [
+    "Voyager One",
+    "pass",
+    33
+   ],
+   [
+    "the Space Shuttle",
+    "pass",
+    36
+   ],
+   [
+    "Mir,",
+    "pass",
+    38
+   ],
+   [
+    "Hubble",
+    "pass",
+    42
+   ],
+   [
+    "the International",
+    "pass",
+    47
+   ],
+   [
+    "rovers on Mars",
+    "pass",
+    50
+   ],
+   [
+    "China's first",
+    "pass",
+    52
+   ],
+   [
+    "a landing on a comet",
+    "pass",
+    53
+   ],
+   [
+    "India at Mars",
+    "pass",
+    61
+   ],
+   [
+    "rockets that land",
+    "pass",
+    64
+   ],
+   [
+    "thousands of Starlink",
+    "pass",
+    68
+   ],
+   [
+    "the James Webb",
+    "pass",
+    74
+   ],
+   [
+    "people flying around",
+    "pass",
+    79
+   ],
+   [
+    "and Starship.",
+    "pass",
+    80
+   ],
+   [
+    "Sixty-nine years",
+    "globe",
+    0
+   ],
+   [
+    "This is everything",
+    "all",
+    0
+   ]
+  ]
+ }
+]

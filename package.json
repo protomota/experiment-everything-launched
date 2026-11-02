@@ -1,0 +1,28 @@
+{
+  "name": "everything-launched",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Every object cataloged in Earth orbit since 1957, on its orbit, from Jonathan McDowell's GCAT.",
+  "scripts": {
+    "fetch-gcat": "bash tools/fetch-gcat.sh",
+    "bake": "python3 bake/bake.py && python3 bake/launches.py && python3 bake/search.py && node tools/milestone-objects.mjs",
+    "build": "node build.mjs",
+    "build:site": "SITE=1 node build.mjs",
+    "models": "node tools/models.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/space-grotesk": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "esbuild": "^0.28.2",
+    "three": "^0.187.0",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "^4.5.1"
+  },
+  "license": "MIT",
+  "author": "Brad Dunlap (Protomota) (https://protomota.com)",
+  "homepage": "https://protomota.com/experiments/everything-launched"
+}

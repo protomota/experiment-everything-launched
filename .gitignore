@@ -1,0 +1,20 @@
+node_modules/
+dist/
+out/
+tmp/
+tools/tmp/
+video/
+parts/
+bake/__pycache__/
+# the first recording pass (never mixed with a later one), pronunciation tests and mixed tracks
+narration/clips/
+narration/pron/
+narration/*.wav
+# NASA 3D Resources originals (public domain): github.com/nasa/NASA-3D-Resources; tools/models.mjs shrinks them into
+# models/web/, which is what the page uses
+models/nasa/
+.DS_Store
+._*
+
+# GCAT downloads (npm run fetch-gcat)
+gcat/
