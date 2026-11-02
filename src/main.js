@@ -90,6 +90,8 @@ const makePoints = (data) => {
     uDriftB: {value: 0},
     uDriftS: {value: -1},
     uFlashDays: {value: 1},
+    uFlashK: {value: 1},
+    uFadeDays: {value: 1},
     uPx: {value: 1},
     uBoost: {value: 1},
     uHi: {value: 0},
@@ -1179,6 +1181,9 @@ function main(data, tracks) {
     if (w > 0.001) camera.setViewOffset(width, height, dx * w, dy * w * 0.8, width, height);
     else camera.clearViewOffset();
   };
+  // window: about a third of a second on screen, in days, for a clock running at speed days a second. Launch pulses
+  // and objects about to come down use it as it is, so they show for the same real time at any speed.
+  const flashFor = (speed) => Math.max(0.03, speed * 0.3);
   const draw = (day, sim, flashDays, cam, drift = null) => {
     // (T.driftAt: in the tour, the breakaway pieces' orbits turn apart on a slower clock than the date)
     uniforms.uDriftS.value = drift ? drift[2] : -1;
@@ -1190,7 +1195,12 @@ function main(data, tracks) {
     uniforms.uDayI.value = di;
     uniforms.uDayF.value = day - di;
     uniforms.uSim.value = sim;
-    uniforms.uFlashDays.value = flashDays;
+    // A new object's glow lasts that long too, but never more than a day, and it dims as the clock speeds past that.
+    // (Uncapped, it was years while the clock raced, so everything from those years glowed at once and the swarm turned
+    // into white blotches; and a one-day glow at full strength would only flicker for a frame; Brad, 2 Nov.)
+    uniforms.uFlashDays.value = Math.min(1, flashDays);
+    uniforms.uFlashK.value = Math.min(1, 1 / flashDays);
+    uniforms.uFadeDays.value = flashDays;
     pulses.update(day, flashDays * 1.4, uniforms.uPx.value);
     earth.globe.rotation.y = spinAt(sim);
     if (cam) {
@@ -1202,6 +1212,7 @@ function main(data, tracks) {
   };
 
   let blackEl = null;
+  let glowT0 = null;
   const tourFrame = (t, {spin = 0, tilt = 0} = {}) => {
     foundMark.visible = false;
     tourSat.visible = false;
@@ -1241,7 +1252,7 @@ function main(data, tracks) {
       const d = Math.min(Math.max(day, data.o1[satRow * 4 + 3] + 1 / 1440), data.o2[satRow * 4] - 1 / 1440);
       placeTourSat(satRow, d, sim, p.opacity * orbitIn);
     }
-    draw(day, sim, Math.max(0.03, speed * 0.3), cam, T.driftAt(t));
+    draw(day, sim, flashFor(speed), cam, T.driftAt(t));
     hud(day, {showTime: speed < 3 && speed > 0.01});
     const c = T.captionAt(t);
     showCaption(c ? c.key : null, c ? c.opacity : 0);
@@ -1287,6 +1298,24 @@ function main(data, tracks) {
       // own turn (both in degrees), the camera's distance and its elevation
       // (for checking: the slower clock the breakaway pieces' orbits turn on, as [day from, day to, how far between])
       drift: (ts) => ts.map((t) => T.driftAt(t)),
+      // (for checking: at each time the clock's speed in days a second and how much is glowing, as the sum of every new
+      // object's glow, so a launch of 60 at full glow is 60)
+      glow: (ts) => {
+        if (!glowT0) glowT0 = Float64Array.from(Array.from({length: data.n}, (_, i) => i).filter((i) => Math.round(data.o3[i]) !== 3), (i) => data.o1[i * 4 + 3]).sort();
+        const from = (d) => {
+          let lo = 0, hi = glowT0.length;
+          while (lo < hi) { const m = (lo + hi) >> 1; if (glowT0[m] < d) lo = m + 1; else hi = m; }
+          return lo;
+        };
+        return ts.map((t) => {
+          const day = T.shownDay(t);
+          const fd = flashFor(Math.abs(T.shownDay(t + 0.05) - T.shownDay(t - 0.05)) / 0.1);
+          const [w, k] = [Math.min(1, fd), Math.min(1, 1 / fd)];
+          let sum = 0;
+          for (let j = from(day - 8 * w); j < glowT0.length && glowT0[j] <= day; j += 1) sum += Math.exp(-(day - glowT0[j]) / w);
+          return [t, fd / 0.3, k * sum];
+        });
+      },
       plan: () => {
         T.tourCamera(0, centreOf, spinAt);
         return T.shotPlanInfo();
@@ -2192,7 +2221,7 @@ function main(data, tracks) {
     controls.update();
     pulses.points.visible = true;
     uniforms.uHi.value = 0;
-    draw(live.day, live.sim, Math.max(0.03, live.rate * 0.3), null);
+    draw(live.day, live.sim, flashFor(live.rate), null);
     hud(live.day, {showTime: holding || (live.playing ? sp.days < 3 : live.rate < 3 && live.rate > 0.01)});
     showPlate(live.room > 0.003 ? live.plateKey : null, live.room, live.spin, {tilt: live.tilt, local});
     // the card's footer: arrows to the milestones either side, and the countdown while the timeline waits on it

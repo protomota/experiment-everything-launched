@@ -162,6 +162,8 @@ uniform float uDriftA;
 uniform float uDriftB;
 uniform float uDriftS;
 uniform float uFlashDays;
+uniform float uFlashK;
+uniform float uFadeDays;
 uniform float uPx;
 uniform float uBoost;
 uniform float uHi;
@@ -220,8 +222,10 @@ void main() {
   );
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   gl_Position = projectionMatrix * mv;
-  float flash = exp(-age / uFlashDays);
-  float fade = clamp(left / uFlashDays, 0.0, 1.0);
+  // a new object glows briefly as it goes up (uFlashK dims it while the clock races); debris doesn't, or a breakup's
+  // thousands of pieces, all starting from one point, would flash as one white blotch (Brad, 2 Nov)
+  float flash = c == 3 ? 0.0 : uFlashK * exp(-age / uFlashDays);
+  float fade = clamp(left / uFadeDays, 0.0, 1.0);
   float near = clamp(7.0 / -mv.z, 1.0, 2.0);
   // distant orbits (geostationary is 6.6 Earth radii out) get slightly larger dots so they stay visible
   float high = 1.0 + 0.09 * clamp(a - 1.5, 0.0, 6.0);

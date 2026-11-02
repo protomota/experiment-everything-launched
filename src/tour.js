@@ -525,9 +525,13 @@ const SHIP_ORDER = Object.fromEntries(BEATS.filter((b) => b.kind === 'ship').map
 // key -> the orbit's highest point, in Earth radii. Their cards open on the launch site, then ease out to the orbit
 // (Brad: show both).
 export const SAT_APO = {};
-// when a satellite's card turns from its launch site to its orbit: 40% of the way through the hold, but at least 3 s
-// on the site and at least half the hold for the orbit
-export const satOrbitFrom = (beat) => beat.a + Math.min(Math.max(3, (beat.b - beat.a) * 0.4), (beat.b - beat.a) * 0.5);
+// when a satellite's card turns from its launch site to its orbit: 40% of the way through the card's time on screen,
+// but at least 3 s on the site and at least half of it for the orbit. (From when the card comes in: Sputnik's comes in
+// after the cold open, 15 s into its beat, and had gone straight to the orbit; Brad, 2 Nov.)
+export const satOrbitFrom = (beat) => {
+  const a = plateIn(beat);
+  return a + Math.min(Math.max(3, (beat.b - a) * 0.4), (beat.b - a) * 0.5);
+};
 // how far the orbit has faded in (0 to 1) for the card up at t, and the launch site's marker fades out as it does
 const SAT_FADE = 1.4;
 export function satOrbitAt(key, t) {
