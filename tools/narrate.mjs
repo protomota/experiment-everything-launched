@@ -21,6 +21,10 @@ const MIN = {ship: 6, breakup: 11, today: 6, stats: 10, lineup: 10, open: 6, clo
 // except the finale, which holds on the globe for a few seconds after its last word (as does the 5-minute cut's last
 // line; its lineup comes first, and the row runs off and the globe comes back in those seconds)
 const HOLD_AFTER = {lineup: 4.5, close: 4.5};
+// but where the lineup opens the cut (the 5-minute cut), the next line follows it like any other: the row runs off,
+// the globe comes back and the clock rewinds to Sputnik in the usual pause between lines, with no hold of its own
+// (Brad: the long pause there should be a quick transition)
+const LINEUP_FIRST = KEYS && KEYS.includes('sputnik1') && KEYS.indexOf('lineup') >= 0 && KEYS.indexOf('lineup') < KEYS.indexOf('sputnik1');
 // the finale's pictures follow the words of its line: narration/script.json "marks" are found in each clip's
 // character alignment (NN-key.json beside the mp3, saved by make_narration.py), or estimated from where they fall in
 // the text when a clip has none
@@ -36,15 +40,19 @@ const missing = plan.filter((b) => !clips[b.key]).map((b) => b.key);
 if (missing.length) throw new Error(`no clip for ${missing.join(', ')}`);
 
 const length = (file) => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', file]).toString());
-// where the speaking stops: the clips end with up to a second or so of quiet, which shouldn't count as narration
-const speechEnd = (file, len) => {
+// The clips end with up to a second or so of quiet, then a few hundredths of a second of noise (a click, loud in some
+// clips: Brad heard it at the end of the junk line). Where the quiet starts is where the speaking stops; where it ends
+// is where the noise starts, and the clip is played up to there and no further (the voice itself is untouched).
+const tailOf = (file, len) => {
   const r = spawnSync('ffmpeg', ['-hide_banner', '-i', file, '-af', 'silencedetect=n=-40dB:d=0.15', '-f', 'null', '-']).stderr.toString();
   const starts = [...r.matchAll(/silence_start: ([\d.]+)/g)].map((m) => Number(m[1]));
   const ends = [...r.matchAll(/silence_end: ([\d.]+)/g)].map((m) => Number(m[1]));
   const lastStart = starts[starts.length - 1];
-  // a silence still running at the end of the file has a start and no end, or ends at the very end
-  if (lastStart !== undefined && (ends.length < starts.length || ends[ends.length - 1] >= len - 0.05)) return lastStart;
-  return len;
+  if (lastStart === undefined) return {talk: len, cut: len};
+  // a silence still running at the end of the file has a start and no end
+  const lastEnd = ends.length < starts.length ? len : ends[ends.length - 1];
+  if (len - lastEnd < 0.2) return {talk: lastStart, cut: Math.max(lastStart + 0.1, lastEnd - 0.01)};
+  return {talk: len, cut: len};
 };
 let t = 0;
 const dur = {};
@@ -52,10 +60,11 @@ const cues = [];
 for (const [i, b] of plan.entries()) {
   const lead = i === 0 ? LEAD_FIRST : LEAD;
   const len = length(clips[b.key]);
-  const talk = speechEnd(clips[b.key], len);
-  const d = Math.max(Math.min(b.dur, MIN[b.kind]), Math.round((lead + talk + (HOLD_AFTER[b.kind] || TAIL)) * 10) / 10);
+  const {talk, cut} = tailOf(clips[b.key], len);
+  const hold = b.kind === 'lineup' && LINEUP_FIRST ? TAIL : HOLD_AFTER[b.kind] || TAIL;
+  const d = Math.max(Math.min(b.dur, MIN[b.kind]), Math.round((lead + talk + hold) * 10) / 10);
   dur[b.key] = d;
-  cues.push({key: b.key, at: Math.round((t + lead) * 1000) / 1000, len: Math.round(len * 100) / 100, talk: Math.round(talk * 100) / 100, a: t, b: t + d});
+  cues.push({key: b.key, at: Math.round((t + lead) * 1000) / 1000, len: Math.round(len * 100) / 100, talk: Math.round(talk * 100) / 100, cut: Math.round(cut * 1000) / 1000, a: t, b: t + d});
   t += d + GAP;
 }
 const total = t - GAP;
@@ -109,7 +118,9 @@ console.log(`${plan.length} beats, tour ${(total / 60).toFixed(1)} min (${total.
 if (process.env.NOMIX) process.exit(0);
 const args = ['-y', '-loglevel', 'error'];
 for (const c of cues) args.push('-i', clips[c.key]);
-const parts = cues.map((c, i) => `[${i}:a]aresample=48000,aformat=channel_layouts=stereo,adelay=${Math.round(c.at * 1000)}:all=1[a${i}]`);
+// each clip ends where its closing quiet does, fading out over its last few hundredths (all of them quiet)
+const trim = (c) => (c.cut ? `atrim=0:${c.cut},afade=t=out:st=${Math.max(0, c.cut - 0.04).toFixed(3)}:d=0.04,` : '');
+const parts = cues.map((c, i) => `[${i}:a]${trim(c)}aresample=48000,aformat=channel_layouts=stereo,adelay=${Math.round(c.at * 1000)}:all=1[a${i}]`);
 const mix = `${cues.map((_, i) => `[a${i}]`).join('')}amix=inputs=${cues.length}:normalize=0:dropout_transition=0,apad=whole_dur=${total.toFixed(3)},atrim=0:${total.toFixed(3)},loudnorm=I=-16:TP=-1.5:LRA=11[out]`;
 args.push('-filter_complex', [...parts, mix].join(';'), '-map', '[out]', '-ar', '48000', '-c:a', 'pcm_s16le', `narration/narration${NAME}.wav`);
 execFileSync('ffmpeg', args, {stdio: 'inherit'});

@@ -1055,6 +1055,18 @@ function main(data, tracks) {
         tourFrame(time);
         return {};
       },
+      // for checking the camera: the shot plan (each beat's kind, key and start, and for launch and breakup shots the
+      // plan's choices), and (tools/spincheck.mjs) at each time the camera's bearing around Earth's axis, the globe's
+      // own turn (both in degrees), the camera's distance and its elevation
+      plan: () => {
+        T.tourCamera(0, centreOf, spinAt);
+        return T.shotPlanInfo();
+      },
+      spin: (times) => times.map((t) => {
+        const cam = T.tourCamera(t, centreOf, spinAt);
+        const pos = cam.target.clone().addScaledVector(cam.dir, cam.dist);
+        return [t, (Math.atan2(pos.x, pos.z) * 180) / Math.PI, ((T.tourTurn(t) + spinAt(T.tourSim(t))) * 180) / Math.PI, cam.dist, (Math.asin(pos.y / pos.length()) * 180) / Math.PI];
+      }),
     };
     Promise.all(SHIPS.map((sh) => stageShips.load(sh))).then(() => {
       window.SIM.ready = true;

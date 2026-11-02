@@ -92,6 +92,14 @@ a breakup, today, the junk and who charts, the rocket lineup), each with its cam
 and what is on screen. Because nothing depends on wall-clock time, the page and the video renderer show exactly the
 same thing, and any frame can be rendered on its own.
 
+**The camera.** The globe only ever turns one way on screen, smoothly, never back and forth. Every launch and breakup
+shot lets the ground under the camera slip west slowly with its site (or the breakup's orbit) in view, and a plan
+(dynamic programming over where each site starts in the frame and how fast it drifts) keeps the forward turns between
+sites as short as they can be. Moves blend in bearing and elevation, never along a straight arc that could pass over
+a pole, and a long swing round the globe takes longer than the gap between beats, so it never averages more than 90
+degrees a second. `PAGE=dist/narrated.html node tools/spincheck.mjs [from] [to]` samples the camera at 30 fps and
+lists any stretch where the globe turns backwards, and the fastest swings.
+
 **The ships.** `src/ships/ships.js` holds the 81 ships: launch time and site, specs, text, and which model to show
 and how. `src/ships/viewer.js` renders the card's model, the large view and the lineup. NASA models live in
 `models/web/`, shrunk from the originals by `tools/models.mjs` (simplified, WebP textures, meshopt). Ships with no
@@ -145,7 +153,9 @@ picture lands on its words.
   own (`narration/script-social.json`: an opening line, the lineup first, a closing line), recorded as a pass of their
   own: `python3 narration/record_pass.py clips-social-pass1 narration/script-social.json`.
 - `NOMIX=1 node tools/narrate.mjs narration/clips-pass4` fits each beat to its line and writes
-  `narration/timing.json` (drop `NOMIX` to also mix `narration/narration.wav`). The finale's timing comes from the
+  `narration/timing.json` (drop `NOMIX` to also mix `narration/narration.wav`). Some clips end with a short click
+  after the last word; each cue's `cut` is where its clip's speech ends, and the mix stops the clip there with a
+  40 ms fade (the clip itself is never edited or joined to another). The finale's timing comes from the
   lineup line's alignment, and `src/belt.js` plans the row of ships so each named ship is centred and still for all
   of its words. The 5-minute cut:
   `SCRIPT=narration/script-social.json KEYS=open,lineup,sputnik1,vostok1,apollo11,iss,starlink,jwst,starship,today,junk,close NAME=social GAP=1.4 NOMIX=1 node tools/narrate.mjs narration/clips-social-pass1`.

@@ -242,7 +242,10 @@ export function shownDay(t) {
   }
   if (t < r0) return END_DAY;
   const back = tourDay(r1);
-  return END_DAY + (back - END_DAY) * smooth((t - r0) / (r1 - r0));
+  // (in the 5-minute cut the rewind can start while the lineup's clock is still running on to today, so it winds back
+  // from wherever that clock has got to)
+  const from = PRELUDE ? finaleDay(r0 - LINEUP.a) : END_DAY;
+  return from + (back - from) * smooth((t - r0) / (r1 - r0));
 }
 export const introAt = (t) => !!INTRO && t < INTRO.rewind[1];
 // In the finale the timeline follows the row of ships: it winds back to 1957 as the rockets lift off, steps through
@@ -354,8 +357,6 @@ export function tourTimeAt(day) {
 export const tourSimAtDay = (day) => tourSim(tourTimeAt(day));
 
 // ------------------------------------------------------------ the camera
-const tmpA = new THREE.Vector3();
-const tmpB = new THREE.Vector3();
 const tmpN = new THREE.Vector3();
 
 // The camera for a breakup: off to the side of the cloud's orbit plane, looking past the cloud toward Earth.
@@ -368,18 +369,44 @@ export function focusFrom(p, q, dist, lift = 0.75, reach = 0.42) {
   return {dir, dist, target: p.clone().multiplyScalar(reach)};
 }
 
-const slerpDir = (a, b, w) => {
-  const dot = Math.min(1, Math.max(-1, a.dot(b)));
-  const ang = Math.acos(dot);
-  if (ang < 1e-4) return a.clone();
-  const s = Math.sin(ang);
-  return a.clone().multiplyScalar(Math.sin((1 - w) * ang) / s).addScaledVector(b, Math.sin(w * ang) / s);
+// Cameras blend in bearing (around Earth's axis) and elevation, never along the straight arc between their
+// directions, which can pass over a pole and flip the globe; and the bearing swings whichever way keeps the globe
+// turning forward on screen: against its turn, or with it by less than the globe itself turns meanwhile (Brad: the
+// globe only ever turns one way, never back and forth). swing is the bearing change, in degrees, chosen once for the
+// whole move (forwardSwing), so it can't change sides half way through.
+const DEG = 180 / Math.PI;
+const bearingOf = (d) => Math.atan2(d.x, d.z) * DEG;
+const elevationOf = (d) => Math.asin(Math.max(-1, Math.min(1, d.y / d.length()))) * DEG;
+const wrap180 = (x) => ((((x + 180) % 360) + 360) % 360) - 180;
+// the swing for a move from one camera to another, given their bearings at its middle and how far (degrees) the globe
+// turns over the move: with the turn only if by less than a third of that (the move eases, so it peaks at 1.5 times
+// its average), else against it
+// (bearings and elevations are the camera's place around Earth, which is what shows the globe turning; for most
+// cameras, which look at Earth's centre, that is just their direction)
+const placeOf = (cam) => (cam.target.lengthSq() ? cam.dir.clone().multiplyScalar(cam.dist).add(cam.target) : cam.dir);
+export const forwardSwing = (from, to, turn) => {
+  const x = ((((bearingOf(placeOf(to)) - bearingOf(placeOf(from))) % 360) + 360) % 360);
+  return x < turn / 3 ? x : x - 360;
 };
-const blendCam = (from, to, w) => ({
-  dir: slerpDir(from.dir, to.dir, w),
-  dist: from.dist + (to.dist - from.dist) * w,
-  target: from.target.clone().lerp(to.target, w),
-});
+const blendCam = (from, to, w, swing) => {
+  const [pa, pb] = [placeOf(from), placeOf(to)];
+  const a = bearingOf(pa);
+  const raw = bearingOf(pb) - a;
+  const d = swing === undefined ? wrap180(raw) : swing + wrap180(raw - swing);
+  const e = elevationOf(pa);
+  const dir = sphericalDir(a + d * w, e + (elevationOf(pb) - e) * w);
+  const target = from.target.clone().lerp(to.target, w);
+  const ra = from.target.lengthSq() ? pa.length() : from.dist;
+  const rb = to.target.lengthSq() ? pb.length() : to.dist;
+  const dist = ra + (rb - ra) * w;
+  if (!target.lengthSq()) return {dir, dist, target};
+  // a camera looking past Earth's centre (a breakup's): put it in its place and look at the target from there
+  const off = dir.multiplyScalar(dist).sub(target);
+  const len = off.length();
+  return {dir: off.divideScalar(len), dist: len, target};
+};
+// how far (degrees) the globe turns between tour times t0 and t1, its own turn and the slow turn of everything
+const globeTurn = (t0, t1, spinAt) => (spinAt(tourSim(t1)) + tourTurn(t1) - spinAt(tourSim(t0)) - tourTurn(t0)) * DEG;
 
 // where a launch site faces, in the scene, at sim seconds (the globe turns with sim time)
 export const siteLocal = (key) => {
@@ -429,76 +456,281 @@ function shipShot(beat, t, az, el) {
   const k = smooth(clamp01((t - beat.a) / Math.max(6, beat.b - beat.a)));
   const lerp = (x, y) => x + (y - x) * k;
   const move = SHIP_ORDER[beat.key] % 3;
-  // the camera holds its bearing (a touch against the turn) and the turning globe carries the site across the frame
-  if (move === 0) return {dir: sphericalDir(az + lerp(3, -3), el + lerp(-7, 7)), dist: 2.6 * (3.75 / 2.6) ** k, target: new THREE.Vector3()};
-  if (move === 1) return {dir: sphericalDir(az + lerp(3, -3), el + lerp(9, -3)), dist: lerp(3.55, 3.25), target: new THREE.Vector3()};
-  return {dir: sphericalDir(az + lerp(3, -3), el + lerp(10, 2)), dist: 3.9 * (2.95 / 3.9) ** k, target: new THREE.Vector3()};
+  // (az is the camera's bearing at t, which the plan below keeps turning a little slower than the globe)
+  if (move === 0) return {dir: sphericalDir(az, el + lerp(-7, 7)), dist: 2.6 * (3.75 / 2.6) ** k, target: new THREE.Vector3()};
+  if (move === 1) return {dir: sphericalDir(az, el + lerp(9, -3)), dist: lerp(3.55, 3.25), target: new THREE.Vector3()};
+  return {dir: sphericalDir(az, el + lerp(10, 2)), dist: 3.9 * (2.95 / 3.9) ** k, target: new THREE.Vector3()};
 }
 // The cold open's camera: out from the globe as the years fill it, then a slow turn around today's swarm.
 function introCam(t) {
   const grow = smooth(clamp01((t - INTRO.grow[0]) / (INTRO.grow[1] - INTRO.grow[0])));
   const hold = smooth(clamp01((t - INTRO.grow[1]) / (INTRO.hold - INTRO.grow[1])));
-  return {dir: sphericalDir(20 - t * 1.0, 8 + 18 * grow - 6 * hold), dist: 3.2 * (10 / 3.2) ** grow - 3.4 * hold, target: new THREE.Vector3()};
+  return {dir: sphericalDir(SHOTS.introAz - t * 1.0, 8 + 18 * grow - 6 * hold), dist: 3.2 * (10 / 3.2) ** grow - 3.4 * hold, target: new THREE.Vector3()};
 }
+
+// ------------------------------------------------------------ the globe only ever turns one way
+// Brad: the globe should always turn the one way on screen, smoothly, never back and forth. What it shows turning is
+// the ground under the camera: L = the camera's bearing less the globe's turn, the longitude (as a bearing on the
+// globe) the camera looks down on. As long as L only ever goes down, the globe turns forward on screen. So every
+// launch shot lets L slip west slowly (the globe turns r degrees a second on screen) with its site in view, starting
+// o degrees from the middle (left of it if negative) and drifting right; and between shots L goes down by as little
+// as it can, which is a quick forward turn of the globe to the next site. The starting places are planned together
+// (dynamic programming over o for every shot) so that the turns between sites are as short as they can be; a site
+// a little east of the last one, say, starts right of the middle instead of a whole turn of the globe away.
+const PLAN_O = {min: -40, max: 40, end: 50, pref: -12, rMax: 1.5, step: 1, s: 3};
+const PLAN_R = [0.5, 0.75, 1.0, 1.25, 1.5];
+// the Starlink shot lets L slip more slowly and ends a few degrees further west (its path, below)
+const STARLINK_R = 1.0;
+const DEG_ = 180 / Math.PI;
+const siteBearing = (key) => {
+  const v = siteLocal(SHIP[key].site);
+  return Math.atan2(v.x, v.z) * DEG_;
+};
+const mod360 = (x) => ((x % 360) + 360) % 360;
+let SHOTS = null; // {byBeat: Map(beat index -> {L, r, s}), introAz, todayAz}
+// A breakup's view: from off to one side of the cloud's orbit plane as the pieces fly apart, looking past the cloud
+// toward Earth, and lifting further off the plane as the camera pulls back to show the debris spreading round the
+// orbit. The camera no longer chases the cloud (those orbits run nearly over the poles, so chasing it swung the
+// camera over a pole and turned the globe backwards); like a launch shot, it lets L slip west through the card, so
+// the globe keeps turning forward while the cloud races round its orbit. For each side of the plane (s = 0 or 1):
+// the bearing on the globe it looks from (at the moment of the breakup) and its direction for a given lift.
+const BREAK_AIM = new Map();
+const breakupAim = (beat, centreOf, spinAt) => {
+  if (!BREAK_AIM.has(beat.key)) {
+    const tc = beat.a + 2.0;
+    const sim = tourSim(tc);
+    const p = centreOf(beat.key, tourDay(tc), sim, new THREE.Vector3());
+    const q = centreOf(beat.key, tourDay(tc), sim + 240, new THREE.Vector3());
+    const n = new THREE.Vector3().crossVectors(p, q).normalize();
+    BREAK_AIM.set(beat.key, {p, sides: [1, -1].map((side) => {
+      const d = (lift) => {
+        const v = p.clone().normalize().addScaledVector(n, side * lift).normalize();
+        v.y += 0.18;
+        return v.normalize();
+      };
+      // (the cloud's orbit turns with tourTurn but not with the globe's own spin)
+      return {d, bearing: bearingOf(d(1.2)) - spinAt(sim) * DEG_};
+    })});
+  }
+  return BREAK_AIM.get(beat.key);
+};
+// how far into a breakup card the camera pulls back and lifts off the orbit plane (0 to 1)
+const breakupPull = (beat, t) => smooth(clamp01((t - (beat.a + 3.8)) / (beat.b - 0.4 - (beat.a + 3.8))));
+function planShots(spinAt, centreOf) {
+  const G = (t) => (spinAt(tourSim(t)) + tourTurn(t)) * DEG_;
+  const byBeat = new Map();
+  // runs of launch and breakup shots one after another (anything else starts a new run)
+  const runs = [];
+  BEATS.forEach((b, i) => {
+    if (b.kind !== 'ship' && b.kind !== 'breakup') return;
+    const run = runs[runs.length - 1];
+    if (run && run[run.length - 1] === i - 1) run.push(i);
+    else runs.push([i]);
+  });
+  // a launch shot's choices: where its site starts (o) and how fast the globe turns on screen (r); slower turns let
+  // several launches from one site follow each other without the site running off the right of the frame. A
+  // breakup's: which side of the orbit plane it looks from (s), a little to either side of that (o), and r.
+  const shipChoices = [];
+  for (let o = PLAN_O.min; o <= PLAN_O.max; o += PLAN_O.step) for (const r of PLAN_R) shipChoices.push([o, r, 0]);
+  const breakChoices = [];
+  for (const s of [0, 1]) for (let o = -20; o <= 20; o += 2) for (const r of [0.5, 0.75, 1.0]) breakChoices.push([o, r, s]);
+  const choicesOf = (i) => (BEATS[i].kind === 'breakup' ? breakChoices : shipChoices);
+  const bearingOfBeat = (i, s) => (BEATS[i].kind === 'breakup' ? breakupAim(BEATS[i], centreOf, spinAt).sides[s].bearing : siteBearing(BEATS[i].key));
+  const shotOf = (i, [o, r0, s]) => {
+    const b = BEATS[i];
+    const D = b.b - b.a;
+    const star = b.key === 'starlink';
+    const r = star ? STARLINK_R : r0;
+    const L = bearingOfBeat(i, s) - o;
+    const over = star || b.kind === 'breakup' ? 0 : Math.max(0, o + r * D - PLAN_O.end);
+    return {L, r, s, end: L - r * D + (star ? STARLINK_PATH[STARLINK_PATH.length - 1][1] : 0), over};
+  };
+  const own = (i, sh, [o, r]) => (BEATS[i].kind === 'breakup' ? 0.05 * o * o + 200 * (r - 0.75) ** 2 : 0.02 * (o - PLAN_O.pref) ** 2 + 300 * (PLAN_O.rMax - r) ** 2 + 400 * sh.over);
+  const need = PLAN_O.s + PLAN_O.rMax * GAP; // L goes down at least this much from one shot to the next
+  for (const run of runs) {
+    // cost[k]: the least cost of the run up to this shot with choice k
+    let shots = choicesOf(run[0]).map((c) => shotOf(run[0], c));
+    let cost = choicesOf(run[0]).map((c, k) => own(run[0], shots[k], c));
+    const back = [];
+    for (let j = 1; j < run.length; j += 1) {
+      const next = [];
+      const from = [];
+      const choices = choicesOf(run[j]);
+      const now = choices.map((c) => shotOf(run[j], c));
+      choices.forEach((c, k) => {
+        const sh = now[k];
+        let best = Infinity;
+        let arg = 0;
+        for (let k0 = 0; k0 < shots.length; k0 += 1) {
+          if (cost[k0] >= best) continue;
+          const nd = PLAN_O.s + Math.max(shots[k0].r, sh.r) * GAP; // L goes down at least this much between shots
+          const swing = mod360(shots[k0].end - sh.L - nd) + nd; // how far the globe turns between them
+          const cc = cost[k0] + swing * swing;
+          if (cc < best) [best, arg] = [cc, k0];
+        }
+        next.push(best + own(run[j], sh, c));
+        from.push(arg);
+      });
+      cost = next;
+      shots = now;
+      back.push(from);
+    }
+    let k = cost.indexOf(Math.min(...cost));
+    for (let j = run.length - 1; j >= 0; j -= 1) {
+      const sh = shotOf(run[j], choicesOf(run[j])[k]);
+      byBeat.set(run[j], {L: sh.L, r: sh.r, s: sh.s});
+      if (j > 0) k = back[j - 1][k];
+    }
+  }
+  const Lof = (i, t) => {
+    const p = byBeat.get(i);
+    const b = BEATS[i];
+    return p.L - p.r * (t - b.a) + (b.key === 'starlink' ? starlinkPathAt(b, t)[0] : 0);
+  };
+  // the cold open's slow turn (and in the 5-minute cut the lineup after it) hands over to Sputnik with L still above
+  // Sputnik's all through the move between them
+  let introAz = 20;
+  const sp = BEATS.findIndex((b) => b.key === 'sputnik1');
+  if (INTRO && byBeat.has(sp)) {
+    let worst = -Infinity;
+    for (let t = INTRO.rewind[0] - GAP; t <= INTRO.launch + 0.6; t += 0.05) worst = Math.max(worst, t + G(t) + Lof(sp, t));
+    introAz = need + worst;
+  }
+  // "Where we are now" and the cards after it carry on from the last launch shot, a little further west
+  let todayAz = 395;
+  const td = BEATS.findIndex((b) => b.kind === 'today');
+  if (td > 0 && byBeat.has(td - 1)) {
+    let best = Infinity;
+    for (let t = BEATS[td - 1].b; t <= BEATS[td].a; t += 0.05) best = Math.min(best, Lof(td - 1, t) + (t - BEATS[td].a) + G(t));
+    todayAz = best - need;
+  }
+  return {byBeat, introAz, todayAz, Lof, G};
+}
+// what the plan chose, for checking it: each beat's kind and key, and for launch shots where L starts, how fast it
+// slips, the site's starting place (o) and the swing from the beat before
+export const shotPlanInfo = () => BEATS.map((b, i) => {
+  const p = SHOTS && SHOTS.byBeat.get(i);
+  const prev = SHOTS && SHOTS.byBeat.get(i - 1);
+  const prevEnd = prev ? SHOTS.Lof(i - 1, BEATS[i - 1].b) : null;
+  const sb = b.kind === 'breakup' ? (p ? BREAK_AIM.get(b.key).sides[p.s].bearing : 0) : p ? siteBearing(b.key) : 0;
+  return [i, b.kind, b.key, +b.a.toFixed(1), p ? +p.L.toFixed(1) : null, p ? +p.r.toFixed(2) : null,
+    p ? +(sb - p.L).toFixed(1) : null, p && prevEnd !== null ? +(prevEnd - p.L).toFixed(1) : null];
+});
+const ensurePlan = (spinAt, centreOf) => {
+  if (!SHOTS) SHOTS = planShots(spinAt, centreOf);
+  return SHOTS;
+};
+
+// the camera's elevation for a launch site: a little above it
+const siteEl = (key) => {
+  const v = siteLocal(SHIP[key].site);
+  return Math.max(-15, Math.min(42, (Math.asin(v.y) * 180) / Math.PI * 0.75 + 6));
+};
+// how far into the Starlink card its line gets to the train ("Watch them string out", about half way in both cuts),
+// and the camera's path: [time (the card's start, its end, or seconds from that point), bearing and elevation from
+// the launch site's aim (degrees), distance]. The first train comes up from the south-west after that point and arcs
+// north over the Cape by the end of the card.
+const STARLINK_TRAIN = 0.5;
+const STARLINK_PATH = [['a', 0, 8, 3.9], [0, 0, 3, 3.0], [3, -4, -16, 4.3], ['b', -4, 6, 4.6]];
+const starlinkPathAt = (beat, t) => {
+  const sw = beat.a + STARLINK_TRAIN * (beat.b - beat.a);
+  const keys = (k) => STARLINK_PATH.map((row) => [row[0] === 'a' ? beat.a : row[0] === 'b' ? beat.b : sw + row[0], row[k]]);
+  return [eased(keys(1))(t), eased(keys(2))(t), eased(keys(3))(t)];
+};
 
 // One camera per beat, crossfaded through the gaps. centreOf(key, day, sim, out) gives a cloud's centre;
 // spinAt(sim) gives the globe's turn angle.
 const beatCamera = (beat, t, centreOf, spinAt) => {
-  const day = tourDay(t);
-  const sim = tourSim(t);
   // the 5-minute cut's prelude stays on the cold open's slow turn (the globe is dimmed behind the lineup)
+  ensurePlan(spinAt, centreOf);
   if (beat.kind === 'open' || (beat.kind === 'lineup' && PRELUDE)) return introCam(t);
-  if (beat.kind === 'ship' && beat.key === 'starlink') {
-    const p = centreOf('starlink', day, sim, tmpA);
-    const q = centreOf('starlink', day, sim + 240, tmpB);
-    if (p) {
-      // ride just behind the train as it strings out along its orbit; Earth rolls by underneath
-      const k = smooth(clamp01((t - beat.a - 3) / (beat.b - beat.a - 3)));
-      return turned(focusFrom(p, q, 2.3 + 0.35 * k, 0.75 + 0.2 * k, 0.8 - 0.1 * k), tourTurn(t));
-    }
-  }
   if (beat.kind === 'ship') {
-    // aim where the launch site will be a little before the middle of its card, so the turning globe carries it
-    // across the frame from left to right while the card is up
-    const inAt = plateIn(beat);
-    const tr = inAt + 0.4 * (beat.b - inAt);
-    const site = siteLocal(SHIP[beat.key].site).applyAxisAngle(Y_AXIS, spinAt(tourSim(tr)) + tourTurn(tr));
-    const az = (Math.atan2(site.x, site.z) * 180) / Math.PI;
-    const el = Math.max(-15, Math.min(42, (Math.asin(site.y) * 180) / Math.PI * 0.75 + 6));
+    const P = ensurePlan(spinAt, centreOf);
+    const i = BEATS.indexOf(beat);
+    const az = P.G(t) + P.Lof(i, t);
+    const el = siteEl(beat.key);
+    if (beat.key === 'starlink') {
+      // first the launch site, pushing in on Cape Canaveral as the rocket goes up, as the other launches do; then, as
+      // the words get to the train ("Watch them string out along their orbit"), the camera pulls back and dips south,
+      // where the train comes up into view from the south-west, strings out across the frame and arcs north over the
+      // Cape (Brad: the site was off screen when the camera went straight to the train, and riding along with the
+      // train turned the globe backwards)
+      const [, de, dist] = starlinkPathAt(beat, t);
+      return {dir: sphericalDir(az, el + de), dist, target: new THREE.Vector3()};
+    }
     const shot = shipShot(beat, t, az, el);
-    if (INTRO && beat.key === 'sputnik1') return blendCam(introCam(t), shot, smooth(clamp01((t - INTRO.rewind[0]) / (INTRO.launch + 0.6 - INTRO.rewind[0]))));
+    if (INTRO && beat.key === 'sputnik1') {
+      const [t0, t1] = [INTRO.rewind[0], INTRO.launch + 0.6];
+      const tm = (t0 + t1) / 2;
+      const swing = forwardSwing(introCam(tm), shipShot(beat, tm, P.G(tm) + P.Lof(i, tm), el), globeTurn(t0, t1, spinAt));
+      return blendCam(introCam(t), shot, smooth(clamp01((t - t0) / (t1 - t0))), swing);
+    }
     return shot;
   }
   if (beat.kind === 'breakup') {
-    const p = centreOf(beat.key, day, sim, tmpA);
-    const q = centreOf(beat.key, day, sim + 240, tmpB);
-    const k = smooth(clamp01((t - (beat.a + 3.8)) / (beat.b - 0.4 - (beat.a + 3.8))));
-    return turned(focusFrom(p, q, 2.45 + (4.6 - 2.45) * k, 0.75 + 0.85 * k, 0.42 - 0.3 * k), tourTurn(t));
+    // (see breakupAim: the view of the cloud's orbit as the pieces fly apart, the globe still turning forward)
+    const P = ensurePlan(spinAt, centreOf);
+    const i = BEATS.indexOf(beat);
+    const aim = breakupAim(beat, centreOf, spinAt);
+    const k = breakupPull(beat, t);
+    const el = elevationOf(aim.sides[P.byBeat.get(i).s].d(0.75 + 0.85 * k));
+    const target = aim.p.clone().multiplyScalar(0.42 - 0.3 * k).applyAxisAngle(Y_AXIS, tourTurn(t));
+    // the camera's place follows the plan; it looks from there toward the cloud's side of Earth
+    const off = sphericalDir(P.G(t) + P.Lof(i, t), el).multiplyScalar(2.45 + (4.6 - 2.45) * k).sub(target);
+    const len = off.length();
+    return {dir: off.divideScalar(len), dist: len, target};
   }
   // today opens close in, in the thick of it, and pulls out to show everything around Earth; from there the closing
   // cards and the finale follow CLOSE above, turning slowly all the way to the end
   const u = t - TODAY.a;
   const out = smooth(clamp01((u - 1.6) / (TODAY.b - TODAY.a + GAP - 1.6)));
   // (the camera drifts against the globe's turn, never with it, so the globe is seen to turn)
-  if (!CLOSE || t <= CLOSE.t0) return {dir: sphericalDir(395 - u * 1.0, 10 + 11 * out), dist: 2.35 * (WIDE / 2.35) ** out, target: new THREE.Vector3()};
-  return {dir: sphericalDir(395 - u * 1.0 - CLOSE.az(t), CLOSE.el(t)), dist: Math.exp(CLOSE.dist(t)), target: new THREE.Vector3()};
+  const az0 = ensurePlan(spinAt, centreOf).todayAz;
+  if (!CLOSE || t <= CLOSE.t0) return {dir: sphericalDir(az0 - u * 1.0, 10 + 11 * out), dist: 2.35 * (WIDE / 2.35) ** out, target: new THREE.Vector3()};
+  return {dir: sphericalDir(az0 - u * 1.0 - CLOSE.az(t), CLOSE.el(t)), dist: Math.exp(CLOSE.dist(t)), target: new THREE.Vector3()};
 };
 
+// The swing for the crossfade from beat i to beat i + 1 (through the gap between them), chosen at its middle.
+const SWINGS = new Map();
+const crossSwing = (i, centreOf, spinAt) => {
+  if (!SWINGS.has(i)) {
+    const [A, B] = [BEATS[i], BEATS[i + 1]];
+    const tm = (A.b + B.a) / 2;
+    SWINGS.set(i, forwardSwing(beatCamera(A, tm, centreOf, spinAt), beatCamera(B, tm, centreOf, spinAt), globeTurn(A.b, B.a, spinAt)));
+  }
+  return SWINGS.get(i);
+};
+// How long the move from beat i to the next takes, as half its length, centred on the gap between them: the gap, or
+// longer for a long swing round the globe, so the globe never turns faster than SWING_RATE degrees a second on
+// average (Brad: smoothly, the one way). The 5-minute cut's swings all fit their gaps.
+const SWING_RATE = 90;
+const HALVES = new Map();
+const halfOf = (i, centreOf, spinAt) => {
+  if (i < 0 || i >= BEATS.length - 1) return GAP / 2;
+  if (!HALVES.has(i)) HALVES.set(i, Math.max((BEATS[i + 1].a - BEATS[i].b) / 2, Math.abs(crossSwing(i, centreOf, spinAt)) / SWING_RATE / 2));
+  return HALVES.get(i);
+};
 export function tourCamera(t, centreOf, spinAt) {
   const cams = [];
-  for (const beat of BEATS) {
-    if (t < beat.a - GAP || t > beat.b + GAP) continue;
-    const win = Math.min(1, (t - (beat.a - GAP)) / GAP, (beat.b + GAP - t) / GAP);
+  const n = BEATS.length;
+  BEATS.forEach((beat, i) => {
+    // this beat's camera comes in through the move from the beat before and goes out through the move to the next
+    const [mIn, hIn] = i > 0 ? [(BEATS[i - 1].b + beat.a) / 2, halfOf(i - 1, centreOf, spinAt)] : [beat.a - GAP / 2, GAP / 2];
+    const [mOut, hOut] = i < n - 1 ? [(beat.b + BEATS[i + 1].a) / 2, halfOf(i, centreOf, spinAt)] : [beat.b + GAP / 2, GAP / 2];
+    if (t < mIn - hIn || t > mOut + hOut) return;
+    const win = Math.min(1, (t - (mIn - hIn)) / (2 * hIn), (mOut + hOut - t) / (2 * hOut));
     const first = beat === BEATS[0] && t < beat.a;
     const w = first ? 1 : smooth(clamp01(win));
-    if (w <= 0) continue;
-    cams.push([beatCamera(beat, t, centreOf, spinAt), w]);
-  }
+    if (w <= 0) return;
+    cams.push([beatCamera(beat, t, centreOf, spinAt), w, i]);
+  });
   if (!cams.length) return beatCamera(BEATS[0], 0, centreOf, spinAt);
   let [cur, acc] = cams[0];
   for (let k = 1; k < cams.length; k += 1) {
-    const [c, w] = cams[k];
-    cur = blendCam(cur, c, w / (acc + w));
+    const [c, w, i] = cams[k];
+    // (consecutive beats: the one before is beat i - 1)
+    const swing = cams[k - 1][2] === i - 1 ? crossSwing(i - 1, centreOf, spinAt) : undefined;
+    cur = blendCam(cur, c, w / (acc + w), swing);
     acc += w;
   }
   return cur;
