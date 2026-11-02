@@ -783,7 +783,7 @@ const LIST = [
       ['Rocket', 'Proton-K'],
     ],
     body: 'The first robot to rove another world. A team of drivers on Earth steered it from TV pictures that took seconds to arrive. It ran on sunlight caught by the cells inside its lid and kept warm through the lunar nights with a polonium heater, until September 1971. Its laser reflector is still used to measure the distance to the Moon.',
-    model: {src: 'build:lunokhod1', size: ['x', 1.6], view: [35, 18, 0.72], dim: 'bar'},
+    model: {src: 'build:lunokhod1', size: ['x', 1.6], view: [35, 18, 0.86], dim: 'bar'},
   },
   {
     key: 'pioneer10',

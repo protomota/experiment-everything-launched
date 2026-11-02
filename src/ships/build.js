@@ -1397,52 +1397,156 @@ function venera7() {
 }
 
 // ------------------------------------------------------------ Lunokhod 1: an eight-wheeled tub, lid open to the Sun
+// From the Lavochkin drawings and museum photos: a pressurised tub on a flat frame, eight 51 cm wire-mesh wheels with
+// titanium grousers, two TV cameras and the French laser reflector at the front, four panoramic cameras on the sides,
+// the cone and helical antennas, the polonium heater and the ninth (odometer) wheel at the back, and the lid hinged at
+// the back with solar cells on its underside and a radiator on top.
+let LUNO = null;
+const lunoMats = () => {
+  if (LUNO) return LUNO;
+  const meshAlpha = canvasTex(128, 128, (g, w, h) => {
+    g.fillStyle = '#000';
+    g.fillRect(0, 0, w, h);
+    g.strokeStyle = '#fff';
+    g.lineWidth = 3;
+    for (let k = 0; k <= 8; k += 1) {
+      g.beginPath();
+      g.moveTo((k * w) / 8, 0);
+      g.lineTo((k * w) / 8, h);
+      g.stroke();
+      g.beginPath();
+      g.moveTo(0, (k * h) / 8);
+      g.lineTo(w, (k * h) / 8);
+      g.stroke();
+    }
+  }, [6, 1.5]);
+  meshAlpha.colorSpace = THREE.NoColorSpace;
+  const std = (o) => new THREE.MeshStandardMaterial(o);
+  LUNO = {
+    // stainless wire mesh: see-through between the wires
+    tyre: std({color: 0xb7bcc2, alphaMap: meshAlpha, alphaTest: 0.5, roughness: 0.35, metalness: 0.9, side: THREE.DoubleSide}),
+    // the tub's thermal blanket, light grey and quilted
+    blanket: std({color: 0xb9bcb3, roughness: 0.8, normalMap: materials().drab.normalMap, normalScale: new THREE.Vector2(0.7, 0.7)}),
+    // the lid's top: a white radiator
+    radiator: std({color: 0xe9e8e2, roughness: 0.45, metalness: 0.1}),
+    // the polonium heater's black fins
+    fins: std({color: 0x2a2b2e, roughness: 0.5, metalness: 0.6}),
+    // the lid's solar cells, at their real size (about 2 cm)
+    cells: (() => {
+      const m = materials().cells.clone();
+      m.map = materials().cells.map.clone();
+      m.map.repeat.set(7, 7);
+      m.map.needsUpdate = true;
+      return m;
+    })(),
+  };
+  return LUNO;
+};
 function lunokhod1() {
   const M = materials();
+  const L = lunoMats();
   const g = new THREE.Group();
-  // the chassis and eight wire-mesh wheels, 51 cm across
-  box(1.7, 0.08, 2.1, M.darkmetal, g, [0, 0.5, 0]);
+  const R = 0.255;
+  const Y0 = R;
+  // the frame: a flat platform with side rails the wheel arms hang from
+  box(1.12, 0.05, 1.7, M.darkmetal, g, [0, 0.47, 0]);
+  for (const sx of [-1, 1]) box(0.06, 0.08, 1.78, M.metal, g, [sx * 0.56, 0.45, 0]);
   for (const sx of [-1, 1]) {
     for (let k = 0; k < 4; k += 1) {
-      const z = -0.85 + k * 0.567;
+      const z = -0.78 + k * 0.52;
       const w = new THREE.Group();
-      for (const x of [-0.09, 0.09]) mesh(new THREE.TorusGeometry(0.245, 0.012, 6, 32), M.metal, w, [x, 0, 0], [0, Math.PI / 2, 0]);
-      for (let j = 0; j < 12; j += 1) rod([-0.09, Math.cos((j / 12) * TAU) * 0.245, Math.sin((j / 12) * TAU) * 0.245], [0.09, Math.cos((j / 12) * TAU) * 0.245, Math.sin((j / 12) * TAU) * 0.245], 0.007, M.metal, w);
-      for (let j = 0; j < 8; j += 1) rod([0, 0, 0], [0, Math.cos((j / 8) * TAU) * 0.25, Math.sin((j / 8) * TAU) * 0.25], 0.008, M.metal, w);
-      cyl(0.05, -0.12, 0.12, M.darkmetal, w, 16).rotation.z = Math.PI / 2;
-      w.position.set(sx * 0.95, 0.255, z);
+      // three titanium rims, the mesh tyre between them, grousers across it, and spokes to the hub on both faces
+      for (const x of [-0.1, 0, 0.1]) mesh(new THREE.TorusGeometry(R, x ? 0.011 : 0.007, 6, 40), M.metal, w, [x, 0, 0], [0, Math.PI / 2, 0]);
+      mesh(new THREE.CylinderGeometry(R - 0.004, R - 0.004, 0.2, 40, 1, true), L.tyre, w, [0, 0, 0], [0, 0, Math.PI / 2]);
+      for (let j = 0; j < 20; j += 1) {
+        const a = (j / 20) * TAU;
+        const gr = box(0.2, 0.014, 0.022, M.metal, w, [0, Math.cos(a) * (R + 0.006), Math.sin(a) * (R + 0.006)]);
+        gr.rotation.x = -a;
+      }
+      for (const x of [-0.1, 0.1]) {
+        for (let j = 0; j < 6; j += 1) {
+          const a = (j / 6) * TAU + (x > 0 ? 0.26 : 0);
+          rod([x * 0.6, 0, 0], [x, Math.cos(a) * (R - 0.01), Math.sin(a) * (R - 0.01)], 0.007, M.metal, w);
+        }
+      }
+      mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.16, 20), M.darkmetal, w, [0, 0, 0], [0, 0, Math.PI / 2]);
+      w.position.set(sx * 0.7, Y0, z);
       g.add(w);
+      // the wheel's arm and its motor housing on the inside
+      box(0.12, 0.05, 0.08, M.metal, g, [sx * 0.6, Y0 + 0.09, z]);
+      rod([sx * 0.56, 0.44, z], [sx * 0.6, Y0 + 0.08, z], 0.02, M.metal, g);
     }
   }
-  // the pressurised instrument tub, wider at the top
-  const tub = lathe([[0.55, 0.55], [0.72, 0.62], [0.8, 0.95], [0.82, 1.15]], M.drab, g, 48);
-  tub.scale.set(1, 1, 1.2);
-  const top = mesh(new THREE.CircleGeometry(0.82, 48), M.lightgrey, g, [0, 1.15, 0], [-Math.PI / 2, 0, 0]);
-  top.scale.set(1, 1.2, 1);
-  // the lid, hinged at the back and swung open, solar cells on its inside
+  // the pressurised instrument tub: narrow at the bottom, flaring out to a lip under the lid
+  const tubPts = [[0.52, 0.5], [0.58, 0.56], [0.68, 0.72], [0.76, 0.92], [0.8, 1.04], [0.86, 1.07], [0.86, 1.1], [0.8, 1.12]];
+  const tub = lathe(tubPts, L.blanket, g, 64);
+  tub.scale.set(1, 1, 1.12);
+  const deck = mesh(new THREE.CircleGeometry(0.8, 64), M.lightgrey, g, [0, 1.12, 0], [-Math.PI / 2, 0, 0]);
+  deck.scale.set(1, 1.12, 1);
+  ring(0.86, 0.018, 1.085, M.metal, g).scale.set(1, 1.12, 1);
+  // the lid, hinged at the back and opened to the Sun: radiator on top, solar cells underneath
   const hinge = new THREE.Group();
   const lid = new THREE.Group();
-  const shell = mesh(new THREE.SphereGeometry(1.4, 48, 8, 0, TAU, 0, 0.62), M.drab, lid, [0, -1.138, 0]);
-  shell.material = M.drab.clone();
+  const shell = mesh(new THREE.SphereGeometry(1.5, 64, 10, 0, TAU, 0, 0.6), L.radiator, lid, [0, -1.24, 0]);
+  shell.material = L.radiator.clone();
   shell.material.side = THREE.DoubleSide;
-  mesh(new THREE.CircleGeometry(0.8, 48), M.cells, lid, [0, -0.01, 0], [Math.PI / 2, 0, 0]);
-  lid.scale.set(1, 1, 1.2);
-  lid.position.set(0, 0, 0.98);
+  const cellsUnder = mesh(new THREE.CircleGeometry(0.84, 64), L.cells, lid, [0, -0.012, 0], [Math.PI / 2, 0, 0]);
+  mesh(new THREE.TorusGeometry(0.845, 0.016, 6, 80), M.metal, lid, [0, -0.01, 0], [Math.PI / 2, 0, 0]);
+  lid.scale.set(1, 1, 1.12);
+  lid.position.set(0, 0, 0.95);
   hinge.add(lid);
-  hinge.position.set(0, 1.15, -0.98);
+  hinge.position.set(0, 1.12, -0.95);
   hinge.rotation.x = -1.95;
   g.add(hinge);
-  box(0.5, 0.06, 0.06, M.metal, g, [0, 1.15, -0.98]);
-  // the TV cameras on the front, the cone and helical antennas at the back, and the laser reflector
-  for (const x of [-0.25, 0.25]) {
-    cyl(0.06, 0, 0.12, M.darkmetal, g, 20).position.set(x, 1.0, 0.98);
-    g.children[g.children.length - 1].rotation.x = Math.PI / 2;
+  box(0.6, 0.05, 0.06, M.metal, g, [0, 1.12, -0.97]);
+  // the front: two TV cameras with their hoods, and the laser reflector between and below them
+  for (const x of [-0.24, 0.24]) {
+    const cam = new THREE.Group();
+    cyl(0.07, 0, 0.16, M.paint, cam, 24);
+    cyl(0.05, 0.16, 0.2, M.darkmetal, cam, 24);
+    mesh(new THREE.CircleGeometry(0.045, 24), M.glass, cam, [0, 0.201, 0], [-Math.PI / 2, 0, 0]);
+    cam.rotation.x = Math.PI / 2;
+    cam.position.set(x, 0.98, 0.8);
+    g.add(cam);
   }
-  box(0.3, 0.12, 0.08, M.metal, g, [0, 0.82, 1.0]);
-  rod([0.45, 1.15, -0.3], [0.55, 1.75, -0.3], 0.015, M.metal, g);
-  lathe([[0.0, 1.75], [0.18, 2.0], [0.2, 2.02]], M.alu, g, 24).position.set(0.55, 0, -0.3);
-  cyl(0.012, 1.15, 2.05, M.metal, g, 8).position.set(-0.5, 1.6, -0.5);
-  box(0.24, 0.1, 0.18, M.metal, g, [-0.35, 1.2, 0.55]);
+  box(0.42, 0.1, 0.14, M.alu, g, [0, 0.8, 0.78]);
+  const refl = box(0.38, 0.07, 0.01, M.glass, g, [0, 0.8, 0.855]);
+  refl.material = M.glass;
+  // four panoramic cameras, upright on the tub's sides, front and back
+  for (const sx of [-1, 1]) {
+    for (const z of [-0.45, 0.45]) {
+      const pc = cyl(0.045, 0.72, 1.06, M.paint, g, 20);
+      pc.position.set(sx * 0.8, 0.89, z);
+      cyl(0.05, 1.06, 1.09, M.darkmetal, g, 20).position.set(sx * 0.8, 1.075, z);
+      box(0.012, 0.2, 0.03, M.glass, g, [sx * 0.846, 0.92, z]);
+    }
+  }
+  // antennas: the cone (low gain) on its mast, the helical high-gain antenna aimed forward, and a whip
+  rod([0.42, 1.12, 0.3], [0.48, 1.55, 0.3], 0.014, M.metal, g);
+  lathe([[0.0, 1.55], [0.17, 1.8], [0.18, 1.82]], M.alu, g, 32).position.set(0.48, 0, 0.3);
+  const hg = new THREE.Group();
+  cyl(0.035, 0, 0.42, M.metal, hg, 16);
+  helix(0.06, 0.38, 7, 0.006, M.metal, hg, [0, 0.03, 0]);
+  mesh(new THREE.CircleGeometry(0.11, 24), M.metal, hg, [0, 0.02, 0], [-Math.PI / 2, 0, 0]).material = M.metal;
+  hg.rotation.x = 0.75;
+  hg.position.set(-0.42, 1.38, 0.42);
+  g.add(hg);
+  rod([-0.42, 1.12, 0.42], [-0.42, 1.4, 0.42], 0.02, M.metal, g);
+  cyl(0.01, 1.12, 1.95, M.metal, g, 8).position.set(-0.58, 1.535, -0.5);
+  // the back: the polonium-210 heater, finned, and the ninth wheel that measured the distance driven
+  const heat = new THREE.Group();
+  cyl(0.1, -0.18, 0.18, L.fins, heat, 24);
+  for (let k = -3; k <= 3; k += 1) mesh(new THREE.TorusGeometry(0.11, 0.012, 6, 24), L.fins, heat, [0, k * 0.05, 0], [Math.PI / 2, 0, 0]);
+  heat.rotation.z = Math.PI / 2;
+  heat.position.set(0, 0.68, -0.92);
+  g.add(heat);
+  box(0.06, 0.18, 0.12, M.metal, g, [0, 0.58, -0.86]);
+  const nine = new THREE.Group();
+  mesh(new THREE.TorusGeometry(0.1, 0.012, 6, 28), M.metal, nine, [0, 0, 0], [0, Math.PI / 2, 0]);
+  for (let j = 0; j < 6; j += 1) rod([0, 0, 0], [0, Math.cos((j / 6) * TAU) * 0.1, Math.sin((j / 6) * TAU) * 0.1], 0.005, M.metal, nine);
+  nine.position.set(0, 0.1, -1.18);
+  g.add(nine);
+  rod([0, 0.45, -0.85], [0, 0.1, -1.18], 0.012, M.metal, g);
   return g;
 }
 
