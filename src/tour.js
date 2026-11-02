@@ -154,6 +154,9 @@ const INTRO = PRELUDE
 // ------------------------------------------------------------ the date
 // how far into the Starlink card its line gets to the train ("Watch them string out", about half way in both cuts)
 const STARLINK_TRAIN = 0.5;
+// Earth-orbit flights shorter than a card's clock, which runs on 0.8 days from the launch: the clock stops just short
+// of the landing, so the card never draws the orbit of a ship that has come down (minutes, as on the cards)
+const FLIGHT_MIN = {vostok1: 108, friendship7: 295, buran: 206};
 const DATE_KEYS = [];
 for (const beat of BEATS) {
   const {kind, key, a, b} = beat;
@@ -166,7 +169,7 @@ for (const beat of BEATS) {
       const sw = a + STARLINK_TRAIN * (b - a);
       DATE_KEYS.push([a, L - 0.3], [a + 1.1, L], [sw - 1, L + 1.2], [sw + 3, L + 4.5], [b, L + 5.5]);
     }
-    else DATE_KEYS.push([a, L - 0.22], [a + 1.1, L], [b, L + 0.8]);
+    else DATE_KEYS.push([a, L - 0.22], [a + 1.1, L], [b, L + Math.min(0.8, FLIGHT_MIN[key] ? (0.92 * FLIGHT_MIN[key]) / 1440 : 1)]);
   } else if (kind === 'breakup') {
     const T = BREAKUP_DAY[key];
     beat.day = T;
@@ -459,8 +462,22 @@ const CLOSE = (() => {
 // site, a sweep around the globe, a push in toward the site.
 const SHIP_ORDER = Object.fromEntries(BEATS.filter((b) => b.kind === 'ship').map((b, i) => [b.key, i]));
 // The milestone satellites whose orbits the tour draws (main.js fills it in from the catalog before the tour starts):
-// key -> the orbit's highest point, in Earth radii. Their cards show the orbit instead of the launch site.
+// key -> the orbit's highest point, in Earth radii. Their cards open on the launch site, then ease out to the orbit
+// (Brad: show both).
 export const SAT_APO = {};
+// when a satellite's card turns from its launch site to its orbit: 40% of the way through the hold, but at least 3 s
+// on the site and at least half the hold for the orbit
+export const satOrbitFrom = (beat) => beat.a + Math.min(Math.max(3, (beat.b - beat.a) * 0.4), (beat.b - beat.a) * 0.5);
+// how far the orbit has faded in (0 to 1) for the card up at t, and the launch site's marker fades out as it does
+const SAT_FADE = 1.4;
+export function satOrbitAt(key, t) {
+  for (const beat of BEATS) {
+    if (beat.kind !== 'ship' || beat.key !== key || !SAT_APO[key]) continue;
+    if (t < beat.a - GAP || t > beat.b + GAP) continue;
+    return smooth(clamp01((t - satOrbitFrom(beat)) / SAT_FADE));
+  }
+  return 0;
+}
 // how far out the camera goes to take in a satellite's whole orbit (Earth stays where it is on screen), and the most
 // it goes out for one that reaches far beyond geostationary (Chandra's runs off the frame)
 const ORBIT_FIT = 3.7;
@@ -468,10 +485,12 @@ const ORBIT_FIT_MAX = 34;
 // and how far the camera rises or dips (degrees) so a satellite's orbit isn't seen edge-on, as a line (main.js)
 export const SAT_TILT = {};
 function shipShot(beat, t, az, el0) {
-  // (a satellite's card: the camera eases into its view of the orbit once the card is up, and back before the next shot)
+  // (a satellite's card: the launch site first, then the camera eases into its view of the orbit, and back before the
+  // next shot)
   const sat = !!SAT_APO[beat.key];
-  const ease = Math.min(4, (beat.b - beat.a) * 0.22);
-  const out = sat ? smooth(clamp01(Math.min((t - beat.a - 1.2) / ease, (beat.b - 0.4 - t) / ease))) : 0;
+  const from = sat ? satOrbitFrom(beat) : beat.a;
+  const ease = Math.min(3.5, (beat.b - from) * 0.32);
+  const out = sat ? smooth(clamp01(Math.min((t - from) / ease, (beat.b - 0.4 - t) / ease))) : 0;
   const el = el0 + (SAT_TILT[beat.key] || 0) * out;
   const k = smooth(clamp01((t - beat.a) / Math.max(6, beat.b - beat.a)));
   const lerp = (x, y) => x + (y - x) * k;
@@ -480,10 +499,12 @@ function shipShot(beat, t, az, el0) {
   const shot = move === 0 ? {dir: sphericalDir(az, el + lerp(-7, 7)), dist: 2.6 * (3.75 / 2.6) ** k, target: new THREE.Vector3()}
     : move === 1 ? {dir: sphericalDir(az, el + lerp(9, -3)), dist: lerp(3.55, 3.25), target: new THREE.Vector3()}
       : {dir: sphericalDir(az, el + lerp(10, 2)), dist: 3.9 * (2.95 / 3.9) ** k, target: new THREE.Vector3()};
-  // a satellite whose orbit reaches past the frame: the camera eases out to take in the whole orbit once the card is
-  // up, and back in before the next shot (Brad: show the orbit with everything moving around it)
+  // a satellite whose orbit reaches past the frame: the camera eases out to take in the whole orbit after the launch
+  // site, and back in before the next shot (Brad: show the orbit with everything moving around it)
   const fit = Math.min(ORBIT_FIT_MAX, ORBIT_FIT * (SAT_APO[beat.key] || 0));
-  if (fit > shot.dist * 1.15) shot.dist *= (fit / shot.dist) ** out;
+  // (never a threshold here: the shot's own distance changes through the hold, and a test like "fit > dist * 1.15"
+  // flipped part way through Soyuz 1's card, so the globe jumped smaller in one frame; Brad, 2 Nov)
+  shot.dist *= Math.max(1, fit / shot.dist) ** out;
   return shot;
 }
 // The cold open's camera: out from the globe as the years fill it, then a slow turn around today's swarm.

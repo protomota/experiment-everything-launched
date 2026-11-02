@@ -42,6 +42,22 @@ if (process.env.DUMP) for (let i = 1; i < rows.length; i += 3) console.log(rows[
 const mmss = (t) => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`;
 for (const r of out) console.log(`${mmss(r.a)}-${mmss(r.b)} (${r.a.toFixed(1)}-${r.b.toFixed(1)} s): turns back, at worst ${r.low.toFixed(1)} deg/s`);
 console.log(`${out.length} stretches turn the wrong way; slowest on screen ${worst.toFixed(1)} deg/s`);
+// and any jump: the camera's distance, height or bearing changing much faster in one frame than in the frames either
+// side of it (Brad: never any harsh transitions; the globe once jumped smaller in a single frame)
+const dl = (i) => Math.log(rows[i][3] / rows[i - 1][3]);
+const de = (i) => rows[i][4] - rows[i - 1][4];
+const da = (i) => wrap(rows[i][1] - rows[i - 1][1]);
+let jumps = 0;
+for (let i = 2; i < rows.length - 1; i += 1) {
+  for (const [name, f, lim] of [['distance', dl, 0.006], ['height', de, 0.4], ['bearing', da, 0.6]]) {
+    const [p, c, n] = [f(i - 1), f(i), f(i + 1)];
+    if (Math.abs(c - p) > lim && Math.abs(c - n) > lim) {
+      jumps += 1;
+      console.log(`  JUMP in ${name} at ${mmss(rows[i][0])} (${rows[i][0].toFixed(2)} s): ${c.toFixed(3)} in one frame, ${p.toFixed(3)} and ${n.toFixed(3)} either side`);
+    }
+  }
+}
+console.log(`${jumps} jumps`);
 // and the fast swings (FAST deg/s and over, default 25): a big swing between two shots is forward, but should be rare
 const FAST = Number(process.env.FAST || 25);
 let fast = null;

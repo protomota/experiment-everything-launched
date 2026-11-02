@@ -181,7 +181,8 @@ const viewOrbits = (data, centreOf) => {
   for (const beat of T.BEATS) {
     if (beat.kind !== 'ship' || !T.SAT_APO[beat.key]) continue;
     const i = SAT_ROWS[beat.key];
-    const tm = (beat.a + beat.b) / 2;
+    // (planned for the middle of the part of the card that shows the orbit)
+    const tm = (T.satOrbitFrom(beat) + beat.b) / 2;
     const [day, sim] = [T.shownDay(tm), T.tourSim(tm)];
     const d = Math.min(Math.max(day, data.o1[i * 4 + 3] + 1 / 1440), data.o2[i * 4] - 1 / 1440);
     // the orbit's axis, among the orbits (which turn with T.tourTurn)
@@ -222,9 +223,10 @@ const viewOrbits = (data, centreOf) => {
       if (dot > bestDot) [bestDot, bestM] = [dot, data.o1[i * 4 + 1]];
     }
     data.o1[i * 4 + 1] = bestM;
-    report.push([beat.key, Math.round((Math.asin(side(0)) * 180) / Math.PI), best, Math.round((Math.asin(side(best)) * 180) / Math.PI), Math.round((T.tourSim(tm + 1) - sim) / period * 100) / 100]);
+    report.push([beat.key, Math.round((Math.asin(side(0)) * 180) / Math.PI), best, Math.round((Math.asin(side(best)) * 180) / Math.PI), Math.round((T.tourSim(tm + 1) - sim) / period * 100) / 100, +beat.a.toFixed(2), +T.satOrbitFrom(beat).toFixed(2), +beat.b.toFixed(2)]);
   }
-  // (for checking: key, degrees out of the orbit's plane before and after, the tilt, turns of the orbit a second)
+  // (for checking: key, degrees out of the orbit's plane before and after, the tilt, turns of the orbit a second, and
+  // when the card starts, turns to the orbit and ends)
   window.__ORBIT_VIEW = report;
 };
 // cards about a rocket rather than the satellite it carried keep their launch site in the tour, and so do the Starlink
@@ -287,8 +289,14 @@ function main(data, tracks) {
   const tourOrbitMat = new LineMaterial({color: 0xf58025, linewidth: 2.6, transparent: true, opacity: 0.85, depthWrite: false});
   const tourOrbit = new Line2(tourOrbitGeo, tourOrbitMat);
   tourOrbit.frustumCulled = false;
+  // (the ring is drawn over the globe, not cut by it where it overlaps the edge; it fades as the satellite itself
+  // goes behind Earth)
   const tourSatMat = foundMat.clone();
+  tourSatMat.depthTest = false;
   const tourSatRing = new THREE.Mesh(foundRing.geometry, tourSatMat);
+  tourSatRing.renderOrder = 10;
+  const satSeen = new THREE.Vector3();
+  const satRay = new THREE.Vector3();
   const tourSat = new THREE.Group();
   tourSat.add(tourOrbit, tourSatRing);
   tourSat.visible = false;
@@ -311,8 +319,14 @@ function main(data, tracks) {
     positionOf(data, i, day, sim, foundAt);
     tourSatRing.position.copy(foundAt);
     tourSatRing.quaternion.copy(world.quaternion).invert().multiply(camera.quaternion);
-    tourSatRing.scale.setScalar(camera.position.distanceTo(foundAt.clone().applyAxisAngle(Y_AXIS, world.rotation.y)) * 0.02);
-    tourSatMat.opacity = opacity;
+    satSeen.copy(foundAt).applyAxisAngle(Y_AXIS, world.rotation.y);
+    const ringR = camera.position.distanceTo(satSeen) * 0.02;
+    tourSatRing.scale.setScalar(ringR);
+    // how far the line of sight to the satellite passes clear of Earth (negative: through it)
+    satRay.subVectors(satSeen, camera.position);
+    const k = Math.max(0, Math.min(1, -camera.position.dot(satRay) / satRay.lengthSq()));
+    const clear = k >= 1 ? 1 : satRay.multiplyScalar(k).add(camera.position).length() - 1;
+    tourSatMat.opacity = opacity * Math.max(0, Math.min(1, 1 + clear / (0.6 * ringR)));
   };
   const placeFound = (i, day, sim, opacity) => {
     foundMark.visible = i != null && opacity > 0.01 && day >= data.o1[i * 4 + 3] && day < data.o2[i * 4];
@@ -1189,10 +1203,11 @@ function main(data, tracks) {
     const lu = T.lineupAt(t);
     plate.classList.add('tour');
     setRoom(roomAt);
-    // a satellite's card shows its orbit among everything else that is up (Brad, 2 Nov); a rocket's or a probe's shows
-    // its launch site
+    // a satellite's card opens on its launch site, then shows its orbit among everything else that is up (Brad, 2 Nov:
+    // show both); a rocket's or a probe's shows its launch site
     const satRow = p && p.kind === 'ship' && T.SAT_APO[p.key] ? SAT_ROWS[p.key] : null;
-    showMarker(p && p.kind === 'ship' && satRow == null ? SHIP[p.key].site : null, p ? p.opacity : 0, p ? p.local : 0);
+    const orbitIn = satRow != null ? T.satOrbitAt(p.key, t) : 0;
+    showMarker(p && p.kind === 'ship' ? SHIP[p.key].site : null, p ? p.opacity * (1 - orbitIn) : 0, p ? p.local : 0);
     const look = T.lookAt(t);
     uniforms.uKeep.value = look.keep;
     uniforms.uMode.value = Math.max(legendMode, look.mode);
@@ -1203,7 +1218,7 @@ function main(data, tracks) {
     pulses.points.visible = false;
     uniforms.uHi.value = T.trainGlowAt(t);
     world.rotation.y = T.tourTurn(t);
-    if (satRow != null) {
+    if (satRow != null && orbitIn > 0.001) {
       // (the ring faces the camera, so the camera goes in place first; the orbit is drawn from just after the
       // satellite reached orbit until it came down, whatever the clock says)
       camera.position.copy(cam.target).addScaledVector(cam.dir, cam.dist);
@@ -1211,7 +1226,7 @@ function main(data, tracks) {
       camera.lookAt(cam.target);
       world.updateMatrixWorld();
       const d = Math.min(Math.max(day, data.o1[satRow * 4 + 3] + 1 / 1440), data.o2[satRow * 4] - 1 / 1440);
-      placeTourSat(satRow, d, sim, p.opacity);
+      placeTourSat(satRow, d, sim, p.opacity * orbitIn);
     }
     draw(day, sim, Math.max(0.03, speed * 0.3), cam);
     hud(day, {showTime: speed < 3 && speed > 0.01});

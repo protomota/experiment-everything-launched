@@ -19,8 +19,9 @@ A [Protomota](https://protomota.com) experiment by Brad Dunlap. The data is
 - **Every launch.** 7,433 launches from GCAT's launch log pulse at their launch sites as the timeline passes them
   (red for failures).
 - **A guided tour.** On load the page plays a tour from 1957 to today: the date runs fast between milestones and
-  stops at each of 81 ships with a spec card (a satellite's card draws its orbit on the globe among everything else
-  in orbit, the camera easing out for the high ones; a rocket's or a probe's marks its launch site), then shows the three biggest debris events (Fengyun-1C, Iridium 33 and
+  stops at each of 81 ships with a spec card (a satellite's card marks its launch site, then draws its orbit on the
+  globe among everything else in orbit, the camera easing out for the high ones; a rocket's or a probe's marks its
+  launch site), then shows the three biggest debris events (Fengyun-1C, Iridium 33 and
   Kosmos-2251, Kosmos-1408) in slow motion, the state of orbit today, how much of it is junk, who launched it all,
   and finally every rocket side by side to scale.
 - **Milestone cards with 3D models.** Each card has the launch time and site, specs, what the ship did, and a model
