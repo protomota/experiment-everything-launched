@@ -82,40 +82,73 @@ const normalTex = (w, h, height, strength, repeat = [1, 1]) => {
   t.colorSpace = THREE.NoColorSpace;
   return t;
 };
-// crinkled foil: folds of three sizes running every which way, each a soft ridge or groove that fades out at its ends
-const foilHeight = (seed0) => (w, h) => {
-  const H = new Float32Array(w * h).fill(0.5);
+// crumpled foil, as on real thermal blankets: a mosaic of small flat facets, each tilted its own way, at two sizes
+// (Voronoi cells on a wrapping grid, so the tile repeats seamlessly). Written straight into a normal map.
+const crumpleTex = (size, seed0, layers, repeat) => {
   let seed = seed0;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  for (const [n, len, sigma, amp] of [[26, 0.6, 4.5, 0.22], [70, 0.3, 2, 0.12], [90, 0.12, 1, 0.06]]) {
-    for (let k = 0; k < n; k += 1) {
-      const cx = rnd() * w;
-      const cy = rnd() * h;
-      const a = rnd() * Math.PI;
-      const half = (len * w * (0.5 + rnd())) / 2;
-      const A = amp * (0.6 + 0.8 * rnd()) * (rnd() > 0.5 ? 1 : -1);
-      const ux = Math.cos(a);
-      const uy = Math.sin(a);
-      const reach = sigma * 3;
-      const x0 = Math.floor(cx - Math.abs(ux) * half - reach);
-      const x1 = Math.ceil(cx + Math.abs(ux) * half + reach);
-      const y0 = Math.floor(cy - Math.abs(uy) * half - reach);
-      const y1 = Math.ceil(cy + Math.abs(uy) * half + reach);
-      for (let y = y0; y <= y1; y += 1) {
-        const row = (((y % h) + h) % h) * w;
-        for (let x = x0; x <= x1; x += 1) {
-          const px = x - cx;
-          const py = y - cy;
-          const t = (px * ux + py * uy) / half;
-          if (t <= -1 || t >= 1) continue;
-          const dist = (px * -uy + py * ux) / sigma;
-          if (dist > 3 || dist < -3) continue;
-          H[row + (((x % w) + w) % w)] += A * (1 - t * t) * Math.exp(-dist * dist);
+  const sx = new Float32Array(size * size);
+  const sy = new Float32Array(size * size);
+  for (const [cells, slope] of layers) {
+    const cs = size / cells;
+    const px = new Float32Array(cells * cells);
+    const py = new Float32Array(cells * cells);
+    const tx = new Float32Array(cells * cells);
+    const ty = new Float32Array(cells * cells);
+    for (let k = 0; k < cells * cells; k += 1) {
+      px[k] = rnd();
+      py[k] = rnd();
+      const a = rnd() * TAU;
+      const m = slope * Math.sqrt(rnd());
+      tx[k] = Math.cos(a) * m;
+      ty[k] = Math.sin(a) * m;
+    }
+    for (let y = 0; y < size; y += 1) {
+      const gy = Math.floor(y / cs);
+      for (let x = 0; x < size; x += 1) {
+        const gx = Math.floor(x / cs);
+        let best = 1e9;
+        let hit = 0;
+        for (let oy = -1; oy <= 1; oy += 1) {
+          for (let ox = -1; ox <= 1; ox += 1) {
+            const cx = (gx + ox + cells) % cells;
+            const cy = (gy + oy + cells) % cells;
+            const k = cy * cells + cx;
+            const dx = (gx + ox + px[k]) * cs - x;
+            const dy = (gy + oy + py[k]) * cs - y;
+            const d = dx * dx + dy * dy;
+            if (d < best) {
+              best = d;
+              hit = k;
+            }
+          }
         }
+        sx[y * size + x] += tx[hit];
+        sy[y * size + x] += ty[hit];
       }
     }
   }
-  return H;
+  const c = document.createElement('canvas');
+  c.width = size;
+  c.height = size;
+  const g = c.getContext('2d');
+  const out = g.createImageData(size, size);
+  const d = out.data;
+  for (let i = 0; i < size * size; i += 1) {
+    const inv = 127.5 / Math.sqrt(sx[i] * sx[i] + sy[i] * sy[i] + 1);
+    d[i * 4] = 127.5 - sx[i] * inv;
+    d[i * 4 + 1] = 127.5 + sy[i] * inv;
+    d[i * 4 + 2] = 127.5 + inv;
+    d[i * 4 + 3] = 255;
+  }
+  g.putImageData(out, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(...repeat);
+  t.anisotropy = 8;
+  t.colorSpace = THREE.NoColorSpace;
+  return t;
 };
 // quilted thermal blanket: stitched seams in a grid, the cloth puffing up a little between them
 const quiltHeight = (w, h) => {
@@ -236,8 +269,8 @@ export const materials = () => {
     // thermal blankets: the grey-green of early Soviet spacecraft, and crinkled gold foil
     drab: std({color: 0x8c9480, roughness: 0.82, normalMap: normalTex(128, 128, quiltHeight, 1.1, [3, 3]), normalScale: new THREE.Vector2(0.8, 0.8)}),
     mli: std({
-      color: 0xffffff, roughness: 0.32, metalness: 0.78,
-      normalMap: normalTex(512, 512, foilHeight(11), 3.2, [1, 1]),
+      color: 0xffffff, roughness: 0.3, metalness: 0.85,
+      normalMap: crumpleTex(512, 11, [[9, 0.3], [24, 0.13]], [2, 2]),
       normalScale: new THREE.Vector2(1, 1),
       map: canvasTex(512, 512, (g, w, h) => {
         // warm gold, a little lighter and darker in broad patches, with the blanket's taped edges
