@@ -393,6 +393,26 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .lineup h2 { font-size: 20px; }
 }
 
+/* in the tour a phone held upright keeps the globe in view: the card sits in the lower part of the screen, its model
+   beside the title and the specs and text scrolling under them, and the globe goes in the space above it (main.js) */
+@media (max-width: 860px) and (min-height: 501px) {
+  .plate.tour {
+    top: auto; height: min(44svh, 380px); display: grid; grid-template-columns: minmax(0, 1fr) 40%;
+    grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: 'head view' 'scroll scroll' 'hold hold'; gap: 10px 12px;
+  }
+  .plate.tour .plate-head { grid-area: head; }
+  .plate.tour .plate-view { grid-area: view; height: auto; min-height: 112px; margin-top: 26px; }
+  .plate.tour.turn .plate-dims { display: none; }
+  /* (a debris event's or a tally's chart is too small to read there, so those cards give the title the whole width) */
+  .plate.tour:is(.event, .stats):not(.turn) { grid-template-areas: 'head head' 'scroll scroll' 'hold hold'; }
+  .plate.tour:is(.event, .stats):not(.turn) .plate-view { display: none; }
+  .plate.tour:is(.event, .stats):not(.turn) .plate-fig { padding-right: 30px; }
+  .plate.tour .plate-scroll { grid-area: scroll; }
+  .plate.tour .plate-hold { grid-area: hold; }
+  .plate.tour .plate-fig { padding-right: 0; }
+  .plate.tour .plate-hint, .plate.tour .plate-big { display: none; }
+}
+
 /* the capture frame: the plate on the right, 760 px wide */
 .capture .plate { --pw: 780px; top: 44px; right: 60px; bottom: 172px; padding: 30px 34px 30px; gap: 20px; border-radius: 8px; }
 .capture .plate-close { display: none; }

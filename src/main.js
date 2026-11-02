@@ -868,9 +868,11 @@ function main(data, tracks) {
   // the card for a ship or a debris event: spin and tilt turn the ship's model, local is seconds since it opened
   const phoneQ = window.matchMedia('(max-width: 860px)');
   const readoutEl = document.querySelector('.hud .readout');
-  const showPlate = (key, opacity, spinDeg, {tilt = 0, local = 99, slide = 0} = {}) => {
+  const showPlate = (key, opacity, spinDeg, {tilt = 0, local = 99, slide = 0, tour = false} = {}) => {
     const on = !!key && opacity > 0.002;
     plate.classList.toggle('on', on);
+    // (in the tour a phone shows the card low on the screen, under the globe: style.css)
+    plate.classList.toggle('tour', tour);
     plate.style.opacity = on ? opacity.toFixed(3) : '0';
     // on a phone the card covers the title and the date, so they fade out under it
     const under = phoneQ.matches && !CAPTURE && on ? (1 - opacity).toFixed(3) : '';
@@ -1001,6 +1003,8 @@ function main(data, tracks) {
   };
 
   let room = 0;
+  // a phone held upright, where the tour's card sits under the globe
+  const phoneTourQ = window.matchMedia('(max-width: 860px) and (min-height: 501px)');
   const setRoom = (w) => {
     room = w;
     // measured without the card's slide, so the globe doesn't follow it
@@ -1011,7 +1015,8 @@ function main(data, tracks) {
     const st = stage.getBoundingClientRect();
     const side = r.width < st.width * 0.7;
     const dx = side ? (st.right - r.left) / 2 : 0;
-    const dy = side ? 0 : (st.bottom - r.top) / 2 - 40;
+    // (a phone's tour card sits low on the screen, and the globe goes in the middle of the space above it)
+    const dy = side ? 0 : phoneTourQ.matches && plate.classList.contains('tour') ? (st.bottom - r.top) / 2 / 0.8 : (st.bottom - r.top) / 2 - 40;
     if (w > 0.001) camera.setViewOffset(width, height, dx * w, dy * w * 0.8, width, height);
     else camera.clearViewOffset();
   };
@@ -1040,25 +1045,30 @@ function main(data, tracks) {
     const day = T.shownDay(t);
     const sim = T.tourSim(t);
     const speed = Math.abs(T.shownDay(t + 0.05) - T.shownDay(t - 0.05)) / 0.1;
-    const cam = T.tourCamera(t, centreOf, spinAt);
+    const roomAt = T.plateRoomAt(t);
+    // on a phone held upright the card sits under the globe, so the camera backs off to fit the globe above it
+    const cam0 = T.tourCamera(t, centreOf, spinAt);
+    const cam = phoneTourQ.matches ? {...cam0, dist: cam0.dist * (1 + 0.6 * roomAt)} : cam0;
     const p = T.plateAt(t);
     const lu = T.lineupAt(t);
-    setRoom(T.plateRoomAt(t));
+    plate.classList.add('tour');
+    setRoom(roomAt);
     showMarker(p && p.kind === 'ship' ? SHIP[p.key].site : null, p ? p.opacity : 0, p ? p.local : 0);
     const look = T.lookAt(t);
     uniforms.uKeep.value = look.keep;
     uniforms.uMode.value = Math.max(legendMode, look.mode);
     pulses.uniforms.uMode.value = uniforms.uMode.value;
-    // the narrated video shows no launch flashes: they lit up launch sites all over the globe whenever the clock ran
-    // fast between ships, and in the cold open. The only launch site it shows is the current ship's marker.
-    pulses.points.visible = !T.FINALE;
+    // the tour (the narrated video and the page's own) shows no launch flashes: they lit up launch sites all over the
+    // globe whenever the clock ran fast between ships. The only launch site it shows is the current ship's marker
+    // (Brad: launch sites show only when the tour is talking about that launch).
+    pulses.points.visible = false;
     uniforms.uHi.value = T.trainGlowAt(t);
     world.rotation.y = T.tourTurn(t);
     draw(day, sim, Math.max(0.03, speed * 0.3), cam);
     hud(day, {showTime: speed < 3 && speed > 0.01});
     const c = T.captionAt(t);
     showCaption(c ? c.key : null, c ? c.opacity : 0);
-    showPlate(p ? p.key : null, p ? p.opacity : 0, p ? p.local * 9 + spin : 0, {tilt, local: p ? p.local : 0, slide: p ? 1 - p.opacity : 0});
+    showPlate(p ? p.key : null, p ? p.opacity : 0, p ? p.local * 9 + spin : 0, {tilt, local: p ? p.local : 0, slide: p ? 1 - p.opacity : 0, tour: true});
     if (T.FINALE) showFinale(lu ? lu.opacity : 0, lu ? lu.local : 0);
     else showLineup(lu ? lu.opacity : 0, lu ? lu.local * 3 : 0);
     // the narrated video never shows the legend (the page's own tour does)
