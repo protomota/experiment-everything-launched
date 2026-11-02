@@ -1002,8 +1002,9 @@ function main(data, tracks) {
     uniforms.uKeep.value = look.keep;
     uniforms.uMode.value = Math.max(legendMode, look.mode);
     pulses.uniforms.uMode.value = uniforms.uMode.value;
-    // the cold open runs decades a second: keep its launch flashes to the last few weeks
-    draw(day, sim, T.introAt(t) ? Math.min(40, Math.max(0.03, speed * 0.3)) : Math.max(0.03, speed * 0.3), cam);
+    // no launch flashes in the cold open (today's swarm, then the rewind): the first is Sputnik's, at Baikonur
+    pulses.points.visible = !T.introAt(t);
+    draw(day, sim, Math.max(0.03, speed * 0.3), cam);
     hud(day, {showTime: speed < 3 && speed > 0.01});
     const c = T.captionAt(t);
     showCaption(c ? c.key : null, c ? c.opacity : 0);
@@ -1058,6 +1059,7 @@ function main(data, tracks) {
     // Earth to the right of the title, with the geostationary ring sweeping across
     const dir = T.sphericalDir(38, 15);
     const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), dir).normalize();
+    pulses.points.visible = true;
     draw(END_DAY, sim, 0.03, {dir, dist: 7.4, target: right.multiplyScalar(-1.55).add(new THREE.Vector3(0, -0.25, 0))});
     hud(END_DAY, {showTime: false});
     window.CARD_READY = true;
@@ -1900,6 +1902,7 @@ function main(data, tracks) {
       controls.target.multiplyScalar(1 - Math.min(1, dt * 0.6));
     }
     controls.update();
+    pulses.points.visible = true;
     draw(live.day, live.sim, Math.max(0.03, live.rate * 0.3), null);
     hud(live.day, {showTime: holding || (live.playing ? sp.days < 3 : live.rate < 3 && live.rate > 0.01)});
     showPlate(live.room > 0.003 ? live.plateKey : null, live.room, live.spin, {tilt: live.tilt, local});
