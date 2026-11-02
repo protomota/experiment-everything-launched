@@ -22,21 +22,114 @@ const canvasTex = (w, h, draw, repeat = [1, 1]) => {
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
 };
-// solar cells: dark blue cells with thin silver gaps
+// solar cells: deep blue cells with thin silver gaps and faint busbars, each cell a slightly different shade
 const cellsTex = (cols, rows) =>
-  canvasTex(256, 256, (g, w, h) => {
-    g.fillStyle = '#9aa3ad';
+  canvasTex(512, 512, (g, w, h) => {
+    g.fillStyle = '#7d8590';
     g.fillRect(0, 0, w, h);
     const cw = w / 8;
     const ch = h / 8;
+    let seed = 5;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
     for (let i = 0; i < 8; i += 1) {
       for (let j = 0; j < 8; j += 1) {
-        const k = 0.86 + 0.14 * (((i * 7 + j * 13) % 5) / 5);
-        g.fillStyle = `rgb(${Math.round(18 * k)},${Math.round(30 * k)},${Math.round(62 * k)})`;
-        g.fillRect(i * cw + 1.5, j * ch + 1.5, cw - 3, ch - 3);
+        const k = 0.8 + 0.25 * rnd();
+        const x = i * cw + 2;
+        const y = j * ch + 2;
+        const grd = g.createLinearGradient(x, y, x + cw, y + ch);
+        grd.addColorStop(0, `rgb(${Math.round(20 * k)},${Math.round(34 * k)},${Math.round(78 * k)})`);
+        grd.addColorStop(1, `rgb(${Math.round(12 * k)},${Math.round(22 * k)},${Math.round(56 * k)})`);
+        g.fillStyle = grd;
+        g.fillRect(x, y, cw - 4, ch - 4);
+        g.fillStyle = 'rgba(150,160,175,0.28)';
+        g.fillRect(x + (cw - 4) / 3, y, 1, ch - 4);
+        g.fillRect(x + (2 * (cw - 4)) / 3, y, 1, ch - 4);
       }
     }
   }, [cols / 8, rows / 8]);
+// a height field (0..1, computed in plain JS so it looks the same in every browser), turned into a tiling normal map
+const normalTex = (w, h, height, strength, repeat = [1, 1]) => {
+  const H = height(w, h);
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const g = c.getContext('2d');
+  const out = g.createImageData(w, h);
+  const d = out.data;
+  for (let y = 0; y < h; y += 1) {
+    const up = ((y + h - 1) % h) * w;
+    const dn = ((y + 1) % h) * w;
+    const row = y * w;
+    for (let x = 0; x < w; x += 1) {
+      const l = x ? x - 1 : w - 1;
+      const r = x < w - 1 ? x + 1 : 0;
+      const dx = (H[row + r] - H[row + l]) * strength;
+      const dy = (H[dn + x] - H[up + x]) * strength;
+      const inv = 127.5 / Math.sqrt(dx * dx + dy * dy + 1);
+      const o = (row + x) * 4;
+      d[o] = 127.5 - dx * inv;
+      d[o + 1] = 127.5 + dy * inv;
+      d[o + 2] = 127.5 + inv;
+      d[o + 3] = 255;
+    }
+  }
+  g.putImageData(out, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(...repeat);
+  t.anisotropy = 4;
+  t.colorSpace = THREE.NoColorSpace;
+  return t;
+};
+// crinkled foil: folds of three sizes running every which way, each a soft ridge or groove that fades out at its ends
+const foilHeight = (seed0) => (w, h) => {
+  const H = new Float32Array(w * h).fill(0.5);
+  let seed = seed0;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  for (const [n, len, sigma, amp] of [[26, 0.6, 4.5, 0.22], [70, 0.3, 2, 0.12], [90, 0.12, 1, 0.06]]) {
+    for (let k = 0; k < n; k += 1) {
+      const cx = rnd() * w;
+      const cy = rnd() * h;
+      const a = rnd() * Math.PI;
+      const half = (len * w * (0.5 + rnd())) / 2;
+      const A = amp * (0.6 + 0.8 * rnd()) * (rnd() > 0.5 ? 1 : -1);
+      const ux = Math.cos(a);
+      const uy = Math.sin(a);
+      const reach = sigma * 3;
+      const x0 = Math.floor(cx - Math.abs(ux) * half - reach);
+      const x1 = Math.ceil(cx + Math.abs(ux) * half + reach);
+      const y0 = Math.floor(cy - Math.abs(uy) * half - reach);
+      const y1 = Math.ceil(cy + Math.abs(uy) * half + reach);
+      for (let y = y0; y <= y1; y += 1) {
+        const row = (((y % h) + h) % h) * w;
+        for (let x = x0; x <= x1; x += 1) {
+          const px = x - cx;
+          const py = y - cy;
+          const t = (px * ux + py * uy) / half;
+          if (t <= -1 || t >= 1) continue;
+          const dist = (px * -uy + py * ux) / sigma;
+          if (dist > 3 || dist < -3) continue;
+          H[row + (((x % w) + w) % w)] += A * (1 - t * t) * Math.exp(-dist * dist);
+        }
+      }
+    }
+  }
+  return H;
+};
+// quilted thermal blanket: stitched seams in a grid, the cloth puffing up a little between them
+const quiltHeight = (w, h) => {
+  const n = 4;
+  const H = new Float32Array(w * h);
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      const u = ((x / w) * n) % 1;
+      const v = ((y / h) * n) % 1;
+      H[y * w + x] = 0.27 + 0.47 * Math.pow(Math.sin(u * Math.PI) * Math.sin(v * Math.PI), 0.6);
+    }
+  }
+  return H;
+};
 // hexagonal heat-shield tiles
 const hexTex = () =>
   canvasTex(512, 512, (g, w, h) => {
@@ -134,26 +227,40 @@ export const materials = () => {
     foamDark: std({color: 0x9a4f24, roughness: 0.9}),
     steel: std({color: 0xffffff, map: steelTex(), roughness: 0.27, metalness: 1}),
     tiles: std({color: 0xffffff, map: hexTex(), roughness: 0.75, metalness: 0.05}),
-    cells: std({color: 0xd8d8d8, map: cellsTex(8, 24), roughness: 0.42, metalness: 0.15, side: THREE.DoubleSide}),
-    cellsWide: std({color: 0xd8d8d8, map: cellsTex(36, 8), roughness: 0.42, metalness: 0.15, side: THREE.DoubleSide}),
+    // solar arrays keep their deep blue edge-on: a weaker glint than plain plastic (specularIntensity)
+    cells: new THREE.MeshPhysicalMaterial({color: 0xffffff, map: cellsTex(8, 24), roughness: 0.34, metalness: 0.05, specularIntensity: 0.3, side: THREE.DoubleSide}),
+    cellsWide: new THREE.MeshPhysicalMaterial({color: 0xffffff, map: cellsTex(36, 8), roughness: 0.34, metalness: 0.05, specularIntensity: 0.3, side: THREE.DoubleSide}),
     lattice: std({color: 0x6f7378, alphaMap: latticeTex(), alphaTest: 0.5, transparent: false, roughness: 0.35, metalness: 0.9, side: THREE.DoubleSide}),
     latticeSteel: std({color: 0xc9ccd0, alphaMap: latticeTex(), alphaTest: 0.5, roughness: 0.3, metalness: 1, side: THREE.DoubleSide}),
     glass: std({color: 0x0b0d10, roughness: 0.05, metalness: 0.6}),
     // thermal blankets: the grey-green of early Soviet spacecraft, and crinkled gold foil
-    drab: std({color: 0x8c9480, roughness: 0.85}),
-    mli: std({color: 0xffffff, roughness: 0.38, metalness: 0.85, map: canvasTex(256, 256, (g, w, h) => {
-      g.fillStyle = '#c9963a';
-      g.fillRect(0, 0, w, h);
-      let seed = 11;
-      const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-      for (let k = 0; k < 900; k += 1) {
-        const v = rnd();
-        g.fillStyle = v > 0.5 ? `rgba(255,226,150,${0.25 * v})` : `rgba(90,58,18,${0.35 * (1 - v)})`;
-        g.beginPath();
-        g.ellipse(rnd() * w, rnd() * h, 2 + rnd() * 14, 1 + rnd() * 5, rnd() * Math.PI, 0, Math.PI * 2);
-        g.fill();
-      }
-    }, [2, 2])}),
+    drab: std({color: 0x8c9480, roughness: 0.82, normalMap: normalTex(128, 128, quiltHeight, 1.1, [3, 3]), normalScale: new THREE.Vector2(0.8, 0.8)}),
+    mli: std({
+      color: 0xffffff, roughness: 0.32, metalness: 0.78,
+      normalMap: normalTex(512, 512, foilHeight(11), 3.2, [1, 1]),
+      normalScale: new THREE.Vector2(1, 1),
+      map: canvasTex(512, 512, (g, w, h) => {
+        // warm gold, a little lighter and darker in broad patches, with the blanket's taped edges
+        g.fillStyle = '#dcae50';
+        g.fillRect(0, 0, w, h);
+        let seed = 23;
+        const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+        for (let k = 0; k < 14; k += 1) {
+          const x = rnd() * w;
+          const y = rnd() * h;
+          const r = 80 + rnd() * 160;
+          const grd = g.createRadialGradient(x, y, 0, x, y, r);
+          const c = rnd() > 0.5 ? '238,196,104' : '176,128,44';
+          grd.addColorStop(0, `rgba(${c},0.32)`);
+          grd.addColorStop(1, `rgba(${c},0)`);
+          g.fillStyle = grd;
+          g.fillRect(0, 0, w, h);
+        }
+        g.strokeStyle = 'rgba(150,108,40,0.55)';
+        g.lineWidth = 5;
+        g.strokeRect(2.5, 2.5, w - 5, h - 5);
+      }),
+    }),
     navy: std({color: 0x1b2a4a, roughness: 0.5}),
   };
   return MATS;

@@ -1328,6 +1328,7 @@ function main(data, tracks) {
 
   function launchCard(k) {
     const [tag, flight, pad, payloads, deep] = index.lau[k].split('\t');
+    const pay = payloadShip(k);
     const names = payloads ? payloads.split('|') : [];
     const n = L.count[k];
     if (!byLaunch) {
@@ -1359,10 +1360,11 @@ function main(data, tracks) {
       names.length ? `${ok ? 'Carried' : 'Was carrying'} ${shown}.` : '',
       !ok ? 'It failed to reach orbit.' : deep ? `${deep === '1' && n === 1 ? 'It' : `${deep} of its payloads`} left Earth orbit for deep space, so ${deep === '1' && n === 1 ? 'it isn’t' : 'they aren’t'} on the globe.` : '',
       objs.length ? `The catalog tracks ${fmt(objs.length)} objects from this launch, counting rocket stages and debris; ${fmt(upNow)} are in orbit today.` : '',
+      pay ? pay.note : '',
       'The timeline is at the launch; the marker is the launch site.',
     ].filter(Boolean).join(' ');
     return {
-      key: `l:${k}`, found: 'launch', day: L.day[k], ship: shipForLv(lvName(k)),
+      key: `l:${k}`, found: 'launch', day: L.day[k], ship: pay ? pay.key : shipForLv(lvName(k)),
       fig: ok ? 'Launch' : 'Failed launch',
       when: `${formatDay(L.day[k])} · ${clock(L.day[k])}`,
       title: L.name[k],
@@ -1536,6 +1538,33 @@ function main(data, tracks) {
     }
     return best;
   };
+  // A launch that carried one of the milestone ships shows that ship's model instead of its rocket's (the rockets
+  // in the lineup keep theirs). Spirit, which has no card of its own, shows its identical twin Opportunity.
+  const TWIN = {'2003-027': ['opportunity', 'Spirit was a Mars rover, the identical twin of Opportunity, shown here. It landed in Gusev Crater in January 2004 and drove on Mars until it got stuck in soft sand in 2009; it last called home in March 2010.']};
+  let shipOfLaunch = null;
+  function payloadShip(k) {
+    if (!shipOfLaunch) {
+      shipOfLaunch = new Map();
+      for (const sh of SHIPS) {
+        const link = LINKS[sh.key];
+        let kk = -1;
+        if (Array.isArray(link)) {
+          const i = rowOfSat(link[0][0]);
+          const t = i >= 0 ? index.obj[i].split('\t', 10)[9] : '';
+          if (t !== '') kk = Number(t);
+        } else if (link === 'launch') kk = launchOfShip(sh.key);
+        if (kk < 0 || shipOfLaunch.has(kk)) continue;
+        const noun = sh.kind.split(' · ')[0].replace(/^(Lunar|Crewed|Communications|Weather|Space|Solar|Comet|Asteroid|Earth|Satellite|Telescope|Relay|Cargo|Internet|Heavy|Reusable|Joint|Fully|Rocket)\b/, (w) => w.toLowerCase());
+        const note = sh.key in LINEUP_NAMES ? '' : `The model is ${sh.title}, ${/^[aeiouAEIOU]/.test(noun) ? 'an' : 'a'} ${noun}.`;
+        shipOfLaunch.set(kk, {key: sh.key, note});
+      }
+      for (const [tag, [key, note]] of Object.entries(TWIN)) {
+        const kk = index.lau.findIndex((line) => line.startsWith(`${tag}\t`));
+        if (kk >= 0) shipOfLaunch.set(kk, {key, note});
+      }
+    }
+    return shipOfLaunch.get(k) || null;
+  }
   actsEl.addEventListener('click', (e) => {
     const b = e.target.closest('.plate-act');
     if (!b || b.disabled) return;

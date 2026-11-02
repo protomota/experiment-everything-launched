@@ -113,6 +113,11 @@ export function createShipStage(canvas, {modelUrl, preserve = false}) {
   const pm = new THREE.PMREMGenerator(renderer);
   scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture;
   scene.environmentIntensity = 0.55;
+  // solar cells catch less of the room than the rest, or seen edge-on they wash out pale blue
+  for (const m of [materials().cells, materials().cellsWide]) {
+    m.envMap = scene.environment;
+    m.envMapIntensity = 0.3;
+  }
   const key = new THREE.DirectionalLight(0xfff2e2, 2.6);
   const rim = new THREE.DirectionalLight(0x9db8ff, 1.7);
   scene.add(key, rim, new THREE.HemisphereLight(0x8090a8, 0x101010, 0.35));

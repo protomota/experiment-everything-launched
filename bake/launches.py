@@ -93,7 +93,10 @@ OUT = os.path.join(os.path.dirname(__file__), '..', 'src', 'launches.json')
 def tidy_lv(s):
     return re.sub(r'\s+', ' ', s).strip()
 
-RENAME = {'1-y ISZ': 'Sputnik 1', '2-y ISZ': 'Sputnik 2', '3-y ISZ': 'Sputnik 3', 'Explorer I': 'Explorer 1'}
+# GCAT calls the two Mars rovers 'Spirit Rover' and 'Opportunity Rover' (the cards say what they are, so the names
+# don't) and writes Hayabusa2 with a space (JAXA doesn't)
+RENAME = {'1-y ISZ': 'Sputnik 1', '2-y ISZ': 'Sputnik 2', '3-y ISZ': 'Sputnik 3', 'Explorer I': 'Explorer 1',
+          'Spirit Rover': 'Spirit', 'Opportunity Rover': 'Opportunity', 'Hayabusa 2': 'Hayabusa2'}
 
 def name_of(ps):
     """One label for a launch's payloads. Parts attached to a bigger spacecraft (no piece letter in GCAT, like

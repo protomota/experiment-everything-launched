@@ -82,6 +82,8 @@ STATES = {
 
 # GCAT files the whole ISS under its first module
 DISPLAY = {'S25544': 'International Space Station (Zarya)'}
+# launch payload names as the launch cards show them (the same as bake/launches.py)
+PL_RENAME = {'Spirit Rover': 'Spirit', 'Opportunity Rover': 'Opportunity', 'Hayabusa 2': 'Hayabusa2'}
 # names people search for that GCAT doesn't use
 ALIAS = {'S25544': 'ISS, International Space Station', 'S48274': 'Tiangong, China Space Station, CSS',
          'S20580': 'HST', 'S16609': 'Mir space station'}
@@ -126,6 +128,7 @@ for t in lorder:
     names = []
     for p in ps:
         n = clean(p.get('Name')) or clean(p.get('PLName'))
+        n = PL_RENAME.get(n, n)
         if n and n not in names:
             names.append(n)
     # long trains of one kind (Starlink, OneWeb ...) keep their first few names; search finds the rest as objects

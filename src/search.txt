@@ -73777,12 +73777,12 @@ Starlink 38457		101256	2026-246AC	P	US
 2003-024	410-01/88505	LC200/39	AMC 9	
 2003-025	D 15000-681	LC1	Progress M1-10	
 2003-026	SL16/DM-SL-18L		Thuraya 2	
-2003-027	D298	SLC17A	Spirit Rover|Columbia Memorial Station	1
+2003-027	D298	SLC17A	Spirit|Columbia Memorial Station	1
 2003-028	V161 (515)	ELA3	BSAT-2c|Optus and Defense C1	
 2003-029	77082  -689 046	LC16/2	Molniya-3	
 2003-030	F34	RW30/12	Orbview-3	
 2003-031	511-1992-008P/72503	LC133/3	Mimosa|DTUSat|MOST|Cubesat-OSCAR-55|QuakeSat|AAU-Cubesat|Can X-1|Cubesat-OSCAR-57|Monitor-E GVM	
-2003-032	D299	SLC17B	Opportunity Rover|Challenger Memorial Station	1
+2003-032	D299	SLC17B	Opportunity|Challenger Memorial Station	1
 2003-033	AV-003	SLC41	Rainbow 1	
 2003-034	SL10/DM-SL-10L		Echostar IX	
 2003-035	77082  -575 081	LC31	Kosmos-2399|Spuskaemaya Kapsula	
@@ -74600,7 +74600,7 @@ Starlink 38457		101256	2026-246AC	P	US
 2014-073	2	LC43/95	Kuaizhou-2	
 2014-074	T 15000-051	LC31	Soyuz TMA-15M	
 2014-075	G 15000-026/1044	LC43/4	Kosmos-2501	
-2014-076	H-IIA-26	Y	Hayabusa 2|Fuji-OSCAR-82|DESPATCH|PROCYON|Hayabusa 2 Return Capsule|Minerva II-1 Rover 1A|Minerva II-1 Rover 1B|Minerva II-2 Rover 2|MASCOT|SCI|DCAM-3	4
+2014-076	H-IIA-26	Y	Hayabusa2|Fuji-OSCAR-82|DESPATCH|PROCYON|Hayabusa 2 Return Capsule|Minerva II-1 Rover 1A|Minerva II-1 Rover 1B|Minerva II-2 Rover 2|MASCOT|SCI|DCAM-3	4
 2014-077	D4-28/D369	SLC37B	Orion EFT-1	
 2014-078	VA221 (575)	ELA3	GSAT-16|DirecTV 14	
 2014-079	Y32	LC9	Zi Yuan 1-04	
