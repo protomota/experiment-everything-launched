@@ -84,6 +84,8 @@ const makePoints = (data) => {
     uFlashDays: {value: 1},
     uPx: {value: 1},
     uBoost: {value: 1},
+    uHi: {value: 0},
+    uHiT0: {value: -1},
     uOn: {value: CATS.map(() => 1)},
     uKeep: {value: CATS.map(() => 1)},
     uSize: {value: CATS.map((c) => c.size)},
@@ -128,6 +130,40 @@ const timeOfDay = (day) => {
   return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`;
 };
 
+// the globe's own turn at sim seconds (radians)
+const GMST0 = 1.2;
+const spinAt = (sim) => GMST0 + EARTH_SPIN * sim;
+
+// The first Starlink train's place along its orbit is made up (the catalog has no phases), so it is put where the film
+// needs it: the middle of the train crosses the middle of the globe on screen just as the narration says "Watch them
+// string out along their orbit" (Brad: the string came into view only after the line, at the edge of the frame).
+const alignTrain = (data, train, centreOf) => {
+  const t = T.starlinkCross();
+  if (t == null) return;
+  const c = train[Math.floor(train.length / 2)];
+  const [day, sim] = [T.tourDay(t), T.tourSim(t)];
+  // where the camera is at that moment and which way it looks, among the orbits (which turn with T.tourTurn)
+  const cam = T.tourCamera(t, centreOf, spinAt);
+  const axis = new THREE.Vector3(0, 1, 0);
+  const eye = cam.dir.clone().multiplyScalar(cam.dist).add(cam.target).applyAxisAngle(axis, -T.tourTurn(t));
+  const ahead = cam.target.clone().applyAxisAngle(axis, -T.tourTurn(t)).sub(eye).normalize();
+  const m0 = data.o1[c * 4 + 1];
+  const p = new THREE.Vector3();
+  const near = (d) => {
+    data.o1[c * 4 + 1] = m0 + d;
+    positionOf(data, c, day, sim, p);
+    // (only on the near side of Earth)
+    return p.dot(eye) > 0 ? p.sub(eye).normalize().dot(ahead) : -2;
+  };
+  let [best, most] = [0, -2];
+  for (let d = 0; d < 2 * Math.PI; d += 0.002) {
+    const v = near(d);
+    if (v > most) [best, most] = [d, v];
+  }
+  data.o1[c * 4 + 1] = m0;
+  for (const k of train) data.o1[k * 4 + 1] += best;
+};
+
 function main(data, tracks) {
   const stage = $('stage');
   const canvas = $('view');
@@ -148,8 +184,6 @@ function main(data, tracks) {
   world.add(earth.group, points);
   scene.add(stars, world);
   const Y_AXIS = new THREE.Vector3(0, 1, 0);
-  const GMST0 = 1.2;
-  const spinAt = (sim) => GMST0 + EARTH_SPIN * sim;
 
   // the launch-site marker: an orange ring with a pulse, on the globe's surface
   const marker = new THREE.Group();
@@ -251,6 +285,11 @@ function main(data, tracks) {
     }
     return out.multiplyScalar(1 / parts.length);
   };
+  if (tracks.starlink && tracks.starlink.train) {
+    alignTrain(data, tracks.starlink.train, centreOf);
+    points.geometry.attributes.aO1.needsUpdate = true;
+    uniforms.uHiT0.value = data.o1[tracks.starlink.index * 4 + 3];
+  }
 
   // ---------------------------------------------------------- HUD
   // The legend: by kind (what each object is) or by country (who it belongs to). Each row hides or shows its dots.
@@ -1013,6 +1052,7 @@ function main(data, tracks) {
     // the narrated video shows no launch flashes: they lit up launch sites all over the globe whenever the clock ran
     // fast between ships, and in the cold open. The only launch site it shows is the current ship's marker.
     pulses.points.visible = !T.FINALE;
+    uniforms.uHi.value = T.trainGlowAt(t);
     world.rotation.y = T.tourTurn(t);
     draw(day, sim, Math.max(0.03, speed * 0.3), cam);
     hud(day, {showTime: speed < 3 && speed > 0.01});
@@ -1961,6 +2001,7 @@ function main(data, tracks) {
     }
     controls.update();
     pulses.points.visible = true;
+    uniforms.uHi.value = 0;
     draw(live.day, live.sim, Math.max(0.03, live.rate * 0.3), null);
     hud(live.day, {showTime: holding || (live.playing ? sp.days < 3 : live.rate < 3 && live.rate > 0.01)});
     showPlate(live.room > 0.003 ? live.plateKey : null, live.room, live.spin, {tilt: live.tilt, local});
@@ -1998,14 +2039,14 @@ const boot = async () => {
     const data = decode(bytes, meta);
     const events2 = events.map((ev) => ({...ev}));
     const {tracks} = prepare(data, events2, T.tourSimAtDay);
-    // the first Starlink launch: follow the middle of its train
+    // the first Starlink launch: its train (main lines it up for the Starlink card) and the satellite in its middle
     const first = data.o3.indexOf(1);
     if (first >= 0) {
       const train = [];
       for (let j = first; j < data.n && data.o1[j * 4 + 3] === data.o1[first * 4 + 3]; j += 1) {
         if (data.o3[j] === 1 && data.o0[j * 4 + 3] === data.o0[first * 4 + 3]) train.push(j);
       }
-      tracks.starlink = {index: train[Math.floor(train.length / 2)]};
+      tracks.starlink = {index: train[Math.floor(train.length / 2)], train};
     }
     window.__DATA = CAPTURE || CARD ? data : undefined;
     main(data, tracks);

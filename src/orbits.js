@@ -159,6 +159,8 @@ uniform float uSim;
 uniform float uFlashDays;
 uniform float uPx;
 uniform float uBoost;
+uniform float uHi;
+uniform float uHiT0;
 uniform float uOn[5];
 uniform float uKeep[5];
 uniform float uSize[5];
@@ -207,8 +209,10 @@ void main() {
   float near = clamp(7.0 / -mv.z, 1.0, 2.0);
   // distant orbits (geostationary is 6.6 Earth radii out) get slightly larger dots so they stay visible
   float high = 1.0 + 0.09 * clamp(a - 1.5, 0.0, 6.0);
-  gl_PointSize = max(1.5, uSize[c] * uPx * near * high * uBoost * (1.0 + 1.4 * flash));
-  vColor = mix(base, vec3(1.0), flash * 0.7) * (1.0 + 1.6 * flash);
+  // the satellites of the launch the tour is following (uHiT0 is its launch time) stand out, larger and brighter
+  float hi = c == 1 && abs(t0 - uHiT0) < 0.0005 ? uHi : 0.0;
+  gl_PointSize = max(1.5, uSize[c] * uPx * near * high * uBoost * (1.0 + 1.4 * flash) * (1.0 + 0.9 * hi));
+  vColor = mix(mix(base, vec3(1.0), flash * 0.7) * (1.0 + 1.6 * flash), vec3(1.0, 0.5, 0.16) * 1.3, 0.8 * hi);
   vAlpha = fade * uKeep[c];
 }
 `;

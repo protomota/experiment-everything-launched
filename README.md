@@ -36,7 +36,10 @@ A [Protomota](https://protomota.com) experiment by Brad Dunlap. The data is
 
 Positions along each orbit are illustrative. GCAT gives each object's perigee, apogee and inclination, so the size,
 shape and tilt of every orbit are real; the orientation of its plane and where the object is along it are seeded
-per object, because GCAT doesn't carry full orbital elements for every object over time.
+per object, because GCAT doesn't carry full orbital elements for every object over time. Satellites launched
+together leave in a line and spread round their orbit over 30 days. The first Starlink train is placed along its
+orbit so that it crosses the middle of the globe as the tour's Starlink card says "Watch them string out along their
+orbit", and is drawn larger, in orange, for that card.
 
 ## Quick start
 

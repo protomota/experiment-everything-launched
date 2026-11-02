@@ -159,8 +159,10 @@ export function launchTrains(data) {
         const m0 = o1[list[0] * 4 + 1];
         const gap = Math.min(0.006, 0.3 / count);
         list.forEach((k, m) => {
+          // the leader pulls ahead and the last falls behind, so the line only ever lengthens (it used to run the
+          // other way, and the line shrank to a point a day and a half out before it spread)
           const start = m0 - m * gap;
-          const end = m0 + (m / count - 0.5) * TAU;
+          const end = m0 - (m / count - 0.5) * TAU;
           o1[k * 4 + 1] = start;
           o2[k * 4 + 3] = (end - start) / SPREAD_DAYS;
         });

@@ -152,6 +152,8 @@ const INTRO = PRELUDE
   : FIT && BEATS[0].key === 'sputnik1' ? {grow: [0.6, 7.2], hold: 12.0, rewind: [12.0, 14.0], launch: 14.6, plate: 15.0, room: 13.4} : null;
 
 // ------------------------------------------------------------ the date
+// how far into the Starlink card its line gets to the train ("Watch them string out", about half way in both cuts)
+const STARLINK_TRAIN = 0.5;
 const DATE_KEYS = [];
 for (const beat of BEATS) {
   const {kind, key, a, b} = beat;
@@ -159,7 +161,11 @@ for (const beat of BEATS) {
     const L = dayOf(SHIP[key].when);
     beat.day = L;
     if (key === 'sputnik1') DATE_KEYS.push([a, L - 0.32], [INTRO ? INTRO.launch : a + 3.4, L], [b, L + 0.9]);
-    else if (key === 'starlink') DATE_KEYS.push([a, L - 0.3], [a + 1.1, L], [a + 3.5, L + 1.5], [b, L + 4]);
+    else if (key === 'starlink') {
+      // the days run on faster as the line gets to the train, so it strings out along its orbit as the words say so
+      const sw = a + STARLINK_TRAIN * (b - a);
+      DATE_KEYS.push([a, L - 0.3], [a + 1.1, L], [sw - 1, L + 1.2], [sw + 3, L + 4.5], [b, L + 5.5]);
+    }
     else DATE_KEYS.push([a, L - 0.22], [a + 1.1, L], [b, L + 0.8]);
   } else if (kind === 'breakup') {
     const T = BREAKUP_DAY[key];
@@ -626,12 +632,23 @@ const siteEl = (key) => {
   const v = siteLocal(SHIP[key].site);
   return Math.max(-15, Math.min(42, (Math.asin(v.y) * 180) / Math.PI * 0.75 + 6));
 };
-// how far into the Starlink card its line gets to the train ("Watch them string out", about half way in both cuts),
-// and the camera's path: [time (the card's start, its end, or seconds from that point), bearing and elevation from
-// the launch site's aim (degrees), distance]. The first train comes up from the south-west after that point and arcs
-// north over the Cape by the end of the card.
-const STARLINK_TRAIN = 0.5;
-const STARLINK_PATH = [['a', 0, 8, 3.9], [0, 0, 3, 3.0], [3, -4, -16, 4.3], ['b', -4, 6, 4.6]];
+// The Starlink card's camera path: [time (the card's start, its end, or seconds from the point its line gets to the
+// train, STARLINK_TRAIN above), bearing and elevation from the launch site's aim (degrees), distance]. It pushes in on
+// Cape Canaveral as the rocket goes up, lifts a little as the train comes through the middle of the frame, and pulls
+// back for the last words.
+// when the train's middle crosses the middle of the frame (main.js sets the train's made-up place along its orbit to
+// fit), seconds after that point: in the middle of "Watch them string out along their orbit"
+const STARLINK_CROSS = 1.5;
+export const starlinkCross = () => {
+  const beat = BEATS.find((b) => b.key === 'starlink');
+  return beat ? beat.a + STARLINK_TRAIN * (beat.b - beat.a) + STARLINK_CROSS : null;
+};
+// how much the first Starlink train stands out (0 to 1): from its launch to the end of its card
+export const trainGlowAt = (t) => {
+  const beat = BEATS.find((b) => b.key === 'starlink');
+  return beat ? smooth(clamp01((t - (beat.a + 1.1)) / 1.5)) * smooth(clamp01((beat.b + GAP / 2 - t) / 1.2)) : 0;
+};
+const STARLINK_PATH = [['a', 0, 8, 3.9], [-1.5, 0, 9, 3.1], [1.5, 0, 14, 3.35], [4.5, 0, 12, 4.1], ['b', 0, 8, 4.6]];
 const starlinkPathAt = (beat, t) => {
   const sw = beat.a + STARLINK_TRAIN * (beat.b - beat.a);
   const keys = (k) => STARLINK_PATH.map((row) => [row[0] === 'a' ? beat.a : row[0] === 'b' ? beat.b : sw + row[0], row[k]]);
@@ -651,10 +668,10 @@ const beatCamera = (beat, t, centreOf, spinAt) => {
     const el = siteEl(beat.key);
     if (beat.key === 'starlink') {
       // first the launch site, pushing in on Cape Canaveral as the rocket goes up, as the other launches do; then, as
-      // the words get to the train ("Watch them string out along their orbit"), the camera pulls back and dips south,
-      // where the train comes up into view from the south-west, strings out across the frame and arcs north over the
-      // Cape (Brad: the site was off screen when the camera went straight to the train, and riding along with the
-      // train turned the globe backwards)
+      // the words get to the train ("Watch them string out along their orbit"), the train comes through the middle of
+      // the frame (main.js puts it there) with the Cape still in view, and the camera pulls back for the last words
+      // (Brad: the site was off screen when the camera went straight to the train, riding along with the train turned
+      // the globe backwards, and then the train showed up late at the edge of the frame)
       const [, de, dist] = starlinkPathAt(beat, t);
       return {dir: sphericalDir(az, el + de), dist, target: new THREE.Vector3()};
     }
