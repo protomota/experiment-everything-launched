@@ -1298,6 +1298,22 @@ function main(data, tracks) {
       // own turn (both in degrees), the camera's distance and its elevation
       // (for checking: the slower clock the breakaway pieces' orbits turn on, as [day from, day to, how far between])
       drift: (ts) => ts.map((t) => T.driftAt(t)),
+      // (for checking a breakup's view: at each time where each of its clouds' centres is in the frame, as x and y from
+      // -1 to 1, and whether the globe hides it, then where Earth's centre is)
+      cloud: (key, ts) => ts.map((t) => {
+        tourFrame(t);
+        world.updateMatrixWorld();
+        camera.updateMatrixWorld();
+        const sim = T.tourSim(t);
+        return tracks[key].map((c) => {
+          const v = world.localToWorld(positionAt(c.a, c.e, c.inc, c.node, c.argp, c.mB + c.n * (sim - c.simB), new THREE.Vector3()));
+          const d = v.clone().sub(camera.position);
+          const k = -camera.position.dot(d) / d.lengthSq();
+          const hid = k > 0 && k < 1 && camera.position.clone().addScaledVector(d, k).length() < 1;
+          const n = v.project(camera);
+          return [+n.x.toFixed(3), +n.y.toFixed(3), hid ? 1 : 0];
+        }).concat([((e) => [+e.x.toFixed(3), +e.y.toFixed(3), 'earth'])(new THREE.Vector3().project(camera))]);
+      }),
       // (for checking: at each time the clock's speed in days a second and how much is glowing, as the sum of every new
       // object's glow, so a launch of 60 at full glow is 60)
       glow: (ts) => {

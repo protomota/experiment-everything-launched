@@ -191,7 +191,7 @@ for (const beat of BEATS) {
 const WARP_WIDE = 100;
 const WARP_KEYS = [];
 for (const {kind, key, a, b} of BEATS) {
-  const w = kind === 'breakup' ? 110 : kind === 'ship' ? (key === 'starlink' ? 220 : 40) : WARP_WIDE;
+  const w = kind === 'breakup' ? 30 : kind === 'ship' ? (key === 'starlink' ? 220 : 40) : WARP_WIDE;
   // the cold open turns the swarm, then settles to the plate's calm as the clock rewinds
   if (INTRO && key === 'sputnik1') WARP_KEYS.push(...(PRELUDE ? [] : [[0, WARP_WIDE]]), [INTRO.rewind[0], WARP_WIDE], [INTRO.rewind[1], w], [b - 0.2, w]);
   else WARP_KEYS.push([a + (a ? 0.2 : 0), w], [b - 0.2, w]);
@@ -607,7 +607,7 @@ let SHOTS = null; // {byBeat: Map(beat index -> {L, r, s}), introAz, todayAz}
 const BREAK_AIM = new Map();
 const breakupAim = (beat, centreOf, spinAt) => {
   if (!BREAK_AIM.has(beat.key)) {
-    const tc = beat.a + 2.0;
+    const tc = beat.a + 4.0;
     const sim = tourSim(tc);
     const p = centreOf(beat.key, tourDay(tc), sim, new THREE.Vector3());
     const q = centreOf(beat.key, tourDay(tc), sim + 240, new THREE.Vector3());
@@ -619,7 +619,11 @@ const breakupAim = (beat, centreOf, spinAt) => {
         return v.normalize();
       };
       // (the cloud's orbit turns with tourTurn but not with the globe's own spin)
-      return {d, bearing: bearingOf(d(1.2)) - spinAt(sim) * DEG_};
+      // right: from this side the cloud shows to the right of Earth's centre, so the globe fills the open part of the
+      // frame to its left instead of sliding under the card
+      const look = d(0.75).negate();
+      const right = new THREE.Vector3().crossVectors(look, Y_AXIS).dot(n.clone().multiplyScalar(-side)) > 0;
+      return {d, right, bearing: bearingOf(d(1.2)) - spinAt(sim) * DEG_};
     })});
   }
   return BREAK_AIM.get(beat.key);
@@ -655,7 +659,7 @@ function planShots(spinAt, centreOf) {
     const over = star || b.kind === 'breakup' ? 0 : Math.max(0, o + r * D - PLAN_O.end);
     return {L, r, s, end: L - r * D + (star ? STARLINK_PATH[STARLINK_PATH.length - 1][1] : 0), over};
   };
-  const own = (i, sh, [o, r]) => (BEATS[i].kind === 'breakup' ? 0.05 * o * o + 200 * (r - 0.75) ** 2 : 0.02 * (o - PLAN_O.pref) ** 2 + 300 * (PLAN_O.rMax - r) ** 2 + 400 * sh.over);
+  const own = (i, sh, [o, r, s]) => (BEATS[i].kind === 'breakup' ? 0.05 * o * o + 200 * (r - 0.75) ** 2 + (breakupAim(BEATS[i], centreOf, spinAt).sides[s].right ? 0 : 3e4) : 0.02 * (o - PLAN_O.pref) ** 2 + 300 * (PLAN_O.rMax - r) ** 2 + 400 * sh.over);
   const need = PLAN_O.s + PLAN_O.rMax * GAP; // L goes down at least this much from one shot to the next
   for (const run of runs) {
     // cost[k]: the least cost of the run up to this shot with choice k
@@ -795,7 +799,10 @@ const beatCamera = (beat, t, centreOf, spinAt) => {
     const aim = breakupAim(beat, centreOf, spinAt);
     const k = breakupPull(beat, t);
     const el = elevationOf(aim.sides[P.byBeat.get(i).s].d(0.75 + 0.85 * k));
-    const target = aim.p.clone().multiplyScalar(0.42 - 0.3 * k).applyAxisAngle(Y_AXIS, tourTurn(t));
+    // it looks toward the cloud as it is now, not where it was at the start, so the pieces stay in the open part of the
+    // frame all through the card (Brad, 2 Nov: Iridium 33's cloud was off at the side of the frame)
+    const now = centreOf(beat.key, tourDay(t), tourSim(t), new THREE.Vector3());
+    const target = now.multiplyScalar(0.8 - 0.65 * k).applyAxisAngle(Y_AXIS, tourTurn(t));
     // the camera's place follows the plan; it looks from there toward the cloud's side of Earth
     const off = sphericalDir(P.G(t) + P.Lof(i, t), el).multiplyScalar(2.45 + (4.6 - 2.45) * k).sub(target);
     const len = off.length();
