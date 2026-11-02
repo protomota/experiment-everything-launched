@@ -826,9 +826,16 @@ function main(data, tracks) {
         svg('line', {x1: x + t, y1: y0, x2: info.top[0], y2: y0, 'stroke-dasharray': '3 4', opacity: 0.5}),
         svg('line', {x1: x + t, y1: y1, x2: info.top[0], y2: y1, 'stroke-dasharray': '3 4', opacity: 0.5}),
       );
-      const label = svg('text', {x: x - 10 * big, y: (y0 + y1) / 2, 'text-anchor': 'end', 'dominant-baseline': 'middle'}, metres(sh.model.size[1]));
-      dims.append(label);
-      dims.append(svg('text', {x: x - 10 * big, y: (y0 + y1) / 2 + 17 * big, 'text-anchor': 'end', 'dominant-baseline': 'middle', class: 'sub'}, 'height'));
+      if (plate.classList.contains('tall')) {
+        // a tall card's narrow column: the label goes under the ship, where the model can't cover it as it turns (beside
+        // the line it was cut off by the Shuttle's boosters; Brad, 2 Nov)
+        const label = svg('text', {x: x - t, y: Math.min(y1 + 26 * big, h - 12 * big), 'text-anchor': 'start', 'dominant-baseline': 'middle'}, metres(sh.model.size[1]));
+        label.append(svg('tspan', {class: 'sub', dx: 9 * big}, 'height'));
+        dims.append(label);
+      } else {
+        dims.append(svg('text', {x: x - 10 * big, y: (y0 + y1) / 2, 'text-anchor': 'end', 'dominant-baseline': 'middle'}, metres(sh.model.size[1])));
+        dims.append(svg('text', {x: x - 10 * big, y: (y0 + y1) / 2 + 17 * big, 'text-anchor': 'end', 'dominant-baseline': 'middle', class: 'sub'}, 'height'));
+      }
     } else {
       const want = Math.min(w * 0.28, 220 * big);
       let L = NICE[0];
