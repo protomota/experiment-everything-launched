@@ -38,7 +38,8 @@ const MODELS = {
   'kepler-a': 30000,
   magellan: 30000,
   'mars-2020-perseverance-rover': 50000,
-  'mars-exploration-rover-opportunity-mer-b': 30000,
+  // NASA/JPL-Caltech's textured Spirit and Opportunity model (science.nasa.gov/resource/spirit-and-opportunity-rover-3d-model)
+  'mars-exploration-rover-jpl': 32000,
   'parker-solar-probe': 30000,
   'pioneer-10': 30000,
   rosetta: 30000,

@@ -1209,7 +1209,7 @@ const LIST = [
       ['Rocket', 'Delta II Heavy'],
     ],
     body: 'Built for three months, it explored Mars for more than fourteen years and found rocks that formed in water. It was the first to drive a marathon\'s distance on another world. In 2018 a planet-wide dust storm covered its solar panels, and it never woke up. It is counted among NASA\'s most successful missions.',
-    model: {src: 'nasa:mars-exploration-rover-opportunity-mer-b', size: ['y', 1.5], view: [35, 15, 0.72], dim: 'bar', paint: 'cells'},
+    model: {src: 'nasa:mars-exploration-rover-jpl', size: ['y', 1.5], view: [35, 15, 0.72], dim: 'bar'},
   },
   {
     key: 'spitzer',

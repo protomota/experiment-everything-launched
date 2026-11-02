@@ -51,13 +51,15 @@ export const MODELS = [
   ['Galileo', 'Galileo'],
   ['Ulysses', 'Ulysses'],
   ['Stardust', 'Stardust'],
-  ['Opportunity', 'Mars Exploration Rover - Opportunity (MER-B)'],
   ['Spitzer Space Telescope', 'Spitzer Space Telescope'],
   ['MESSENGER', 'MErcury Surface, Space ENvironment, GEochemistry, and Ranging (MESSENGER)'],
   ['Dawn', 'Dawn'],
   ['OSIRIS-REx', 'Origins, Spectral Interpretation, Resource Identification, and Security - Regolith Explorer (OSIRIS-REx)'],
   ['InSight', 'InSight Cruise Lander'],
-].map(([name, folder]) => [name, NASA3D(folder)]);
+].map(([name, folder]) => [name, NASA3D(folder)]).concat([
+  // the rover is NASA/JPL-Caltech's textured model from NASA Science, not the plainer one in NASA 3D Resources
+  ['Opportunity (NASA/JPL-Caltech, NASA Science)', 'https://science.nasa.gov/resource/spirit-and-opportunity-rover-3d-model/'],
+]);
 export const MODELS_HOME = ['NASA 3D Resources', 'https://github.com/nasa/NASA-3D-Resources'];
 
 // Each ship card's facts, by ship key. Ships with no NASA model were built for the page from the same articles'

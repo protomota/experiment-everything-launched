@@ -23,7 +23,7 @@ A [Protomota](https://protomota.com) experiment by Brad Dunlap. The data is
   Kosmos-2251, Kosmos-1408) in slow motion, the state of orbit today, how much of it is junk, who launched it all,
   and finally every rocket side by side to scale.
 - **Milestone cards with 3D models.** Each card has the launch time and site, specs, what the ship did, and a model
-  you can turn. The models come from NASA 3D Resources or are built in code from published dimensions. A large view
+  you can turn. The models come from NASA or are built in code from published dimensions. A large view
   shows the model full screen beside its details, and a button jumps to the ship's own catalog object (its orbit on
   the globe) or to its launch.
 - **Search.** Any object by name, satcat number or COSPAR ID, and any launch by payload, rocket or flight. Each
@@ -108,7 +108,7 @@ or launch. `src/sources.js` lists every source.
 ```
 bake/            GCAT -> src/ data (bake.py, launches.py, search.py, who.py)
 build.mjs        bundles the page (dist/index.html, or dist/site/ with SITE=1)
-models/web/      NASA 3D Resources models, shrunk for the web (models/nasa/ originals are not checked in)
+models/web/      NASA 3D models, shrunk for the web (models/nasa/ originals are not checked in)
 narration/       the narrated film: script, recording, the voice clips and timing
 src/             the page: main.js, tour.js, orbits.js, prepare.js, earth.js, launches.js, find.js, belt.js,
                  index.html, style.css, and the baked data
@@ -176,7 +176,7 @@ others, under their own terms:
 | What | Source | Terms |
 | --- | --- | --- |
 | Catalog and launch data, and the files baked from it (`src/catalog.*`, `src/launches.json`, `src/search.txt`, `bake/*.json`) | [GCAT](https://planet4589.org/space/gcat/) by Jonathan C. McDowell | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): credit GCAT and its author ([acknowledgement](https://planet4589.org/space/gcat/web/intro/ack.html)) |
-| 3D models in `models/web/` | [NASA 3D Resources](https://github.com/nasa/NASA-3D-Resources) | Free to use under [NASA's media usage guidelines](https://www.nasa.gov/multimedia/guidelines/index.html); don't imply NASA endorsement |
+| 3D models in `models/web/` | [NASA 3D Resources](https://github.com/nasa/NASA-3D-Resources); the Opportunity rover is NASA/JPL-Caltech's [Spirit and Opportunity model](https://science.nasa.gov/resource/spirit-and-opportunity-rover-3d-model/) | Free to use under [NASA's media usage guidelines](https://www.nasa.gov/multimedia/guidelines/index.html); don't imply NASA endorsement |
 | Coastlines | [Natural Earth](https://www.naturalearthdata.com/) via [world-atlas](https://github.com/topojson/world-atlas) | Public domain (Natural Earth), ISC (world-atlas) |
 | Fonts bundled into the page | [Space Grotesk](https://github.com/floriankarsten/space-grotesk) and [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) via Fontsource | SIL Open Font License 1.1 |
 | Libraries | [three.js](https://threejs.org/), [topojson-client](https://github.com/topojson/topojson-client), [esbuild](https://esbuild.github.io/), [glTF Transform](https://gltf-transform.dev/) | MIT, ISC, MIT, MIT |

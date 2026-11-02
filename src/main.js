@@ -143,7 +143,11 @@ function main(data, tracks) {
   const earth = createEarth(Math.min(maxTex, CAPTURE || CARD ? 8192 : 4096));
   const stars = createStars();
   const {points, uniforms} = makePoints(data);
-  scene.add(stars, earth.group, points);
+  // the globe and everything in orbit turn together about Earth's axis (T.tourTurn), in front of still stars
+  const world = new THREE.Group();
+  world.add(earth.group, points);
+  scene.add(stars, world);
+  const Y_AXIS = new THREE.Vector3(0, 1, 0);
   const GMST0 = 1.2;
   const spinAt = (sim) => GMST0 + EARTH_SPIN * sim;
 
@@ -170,7 +174,7 @@ function main(data, tracks) {
   const foundMark = new THREE.Group();
   foundMark.add(foundRing, new THREE.LineLoop(orbitGeo, orbitMat));
   foundMark.visible = false;
-  scene.add(foundMark);
+  world.add(foundMark);
   const foundAt = new THREE.Vector3();
   const placeFound = (i, day, sim, opacity) => {
     foundMark.visible = i != null && opacity > 0.01 && day >= data.o1[i * 4 + 3] && day < data.o2[i * 4];
@@ -187,8 +191,9 @@ function main(data, tracks) {
     orbitGeo.computeBoundingSphere();
     positionOf(data, i, day, sim, foundAt);
     foundRing.position.copy(foundAt);
-    foundRing.quaternion.copy(camera.quaternion);
-    foundRing.scale.setScalar(camera.position.distanceTo(foundAt) * 0.02);
+    // face the camera from inside the turning world
+    foundRing.quaternion.copy(world.quaternion).invert().multiply(camera.quaternion);
+    foundRing.scale.setScalar(camera.position.distanceTo(foundAt.clone().applyAxisAngle(Y_AXIS, world.rotation.y)) * 0.02);
     foundMat.opacity = opacity;
     orbitMat.opacity = 0.55 * opacity;
   };
@@ -203,6 +208,8 @@ function main(data, tracks) {
     pulse.scale.setScalar(1 + 2.2 * f);
     pulseMat.opacity = opacity * (1 - f) * 0.8;
   };
+  // the globe keeps turning on the live page too, except for visitors who ask for less motion
+  const turnRate = () => (reducedMotion ? 0 : T.TURN_RATE);
   const live = {
     mode: 'tour',
     tourT: 0,
@@ -219,6 +226,7 @@ function main(data, tracks) {
     spin: 0,
     spinV: 0,
     tilt: 0,
+    turn: 0,
     dragging: false,
     room: 0,
     fly: null,
@@ -1002,8 +1010,10 @@ function main(data, tracks) {
     uniforms.uKeep.value = look.keep;
     uniforms.uMode.value = Math.max(legendMode, look.mode);
     pulses.uniforms.uMode.value = uniforms.uMode.value;
-    // no launch flashes in the cold open (today's swarm, then the rewind): the first is Sputnik's, at Baikonur
-    pulses.points.visible = !T.introAt(t);
+    // the narrated video shows no launch flashes: they lit up launch sites all over the globe whenever the clock ran
+    // fast between ships, and in the cold open. The only launch site it shows is the current ship's marker.
+    pulses.points.visible = !T.FINALE;
+    world.rotation.y = T.tourTurn(t);
     draw(day, sim, Math.max(0.03, speed * 0.3), cam);
     hud(day, {showTime: speed < 3 && speed > 0.01});
     const c = T.captionAt(t);
@@ -1011,7 +1021,8 @@ function main(data, tracks) {
     showPlate(p ? p.key : null, p ? p.opacity : 0, p ? p.local * 9 + spin : 0, {tilt, local: p ? p.local : 0, slide: p ? 1 - p.opacity : 0});
     if (T.FINALE) showFinale(lu ? lu.opacity : 0, lu ? lu.local : 0);
     else showLineup(lu ? lu.opacity : 0, lu ? lu.local * 3 : 0);
-    legend.style.opacity = Math.max(1 - Math.max(room, lu ? lu.opacity : 0), T.legendAt(t)).toFixed(3);
+    // the narrated video never shows the legend (the page's own tour does)
+    legend.style.opacity = T.FINALE ? '0' : Math.max(1 - Math.max(room, lu ? lu.opacity : 0), T.legendAt(t)).toFixed(3);
     const under = phoneQ.matches && p ? 1 - p.opacity : 1;
     const luOp = lu ? lu.opacity : 0;
     titleEl.style.opacity = Math.min(under, 1 - luOp).toFixed(3);
@@ -1105,6 +1116,7 @@ function main(data, tracks) {
     if (live.mode === 'tour') {
       const cam = T.tourCamera(live.tourT, centreOf, spinAt);
       live.sim = T.tourSim(live.tourT);
+      live.turn = T.tourTurn(live.tourT);
       controls.target.copy(cam.target);
       camera.position.copy(cam.target).addScaledVector(cam.dir, cam.dist);
       controls.update();
@@ -1157,14 +1169,16 @@ function main(data, tracks) {
   };
   const flyToSite = (sh) => flyToDir(T.siteLocal(sh.site));
   const flyToDir = (local) => {
-    const site = local.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), spinAt(live.sim + 2 * 40));
+    // where the site will be a few seconds after the camera gets there (the globe keeps turning)
+    const site = local.clone().applyAxisAngle(Y_AXIS, spinAt(live.sim + 2 * 40) + live.turn + turnRate() * 6);
     const az = (Math.atan2(site.x, site.z) * 180) / Math.PI;
     const el = Math.max(-15, Math.min(42, ((Math.asin(site.y) * 180) / Math.PI) * 0.75 + 6));
     live.fly = {from: camNow(), to: {dir: T.sphericalDir(az - 14, el), dist: 3.4, target: new THREE.Vector3()}, t: 0};
   };
   const flyToCloud = (ev) => {
-    const p = centreOf(ev.key, ev.t, simAt(ev) + 120, new THREE.Vector3());
-    const q = centreOf(ev.key, ev.t, simAt(ev) + 360, new THREE.Vector3());
+    const ang = live.turn + turnRate() * 1.6;
+    const p = centreOf(ev.key, ev.t, simAt(ev) + 120, new THREE.Vector3()).applyAxisAngle(Y_AXIS, ang);
+    const q = centreOf(ev.key, ev.t, simAt(ev) + 360, new THREE.Vector3()).applyAxisAngle(Y_AXIS, ang);
     live.fly = {from: camNow(), to: T.focusFrom(p, q, 2.9), t: 0};
   };
   // reach a ship's launch: the date stops there while its card is up
@@ -1376,7 +1390,7 @@ function main(data, tracks) {
     plateKey = null;
     openCard(key, {hold: false, resume: false});
     // look at where it will be once the camera is there, from a little to one side and above
-    const p = positionOf(data, i, live.day, live.sim + 1.6 * 40, new THREE.Vector3());
+    const p = positionOf(data, i, live.day, live.sim + 1.6 * 40, new THREE.Vector3()).applyAxisAngle(Y_AXIS, live.turn + turnRate() * 1.6);
     const r = p.length();
     const dir = p.normalize();
     const side = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), dir).normalize();
@@ -1829,6 +1843,7 @@ function main(data, tracks) {
         if (!live.dragging) live.spin += dt * live.spinV;
         live.spinV *= Math.exp(-dt * 2.5);
         tourFrame(live.tourT, {spin: live.spin, tilt: live.tilt});
+        live.turn = T.tourTurn(live.tourT);
         $('plate-hold').hidden = true;
         return;
       }
@@ -1871,6 +1886,8 @@ function main(data, tracks) {
       else if (next) atBreakup(next.ev, {resume: true});
     }
     if (!reducedMotion || live.playing || holding) live.sim += dt * warp;
+    live.turn += dt * turnRate();
+    world.rotation.y = live.turn;
     const moved = Math.abs(live.day - before) / Math.max(dt, 1e-3);
     live.rate += (moved - live.rate) * Math.min(1, dt * 6);
     const cardOn = !!live.card;

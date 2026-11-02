@@ -303,6 +303,15 @@ export const tourSim = (t) => {
 };
 export const tourWarp = warpAt;
 
+// The globe never sits still on screen: on top of Earth's own turn with the orbit clock, the globe and everything
+// around it turn slowly about Earth's axis the whole time (as if the camera drifted west around it, with the stars
+// held still), and the shots of the whole globe no longer turn the camera along with it.
+export const TURN_RATE = (2.5 * Math.PI) / 180; // radians per second
+export const tourTurn = (t) => TURN_RATE * Math.max(0, t);
+const Y_AXIS = new THREE.Vector3(0, 1, 0);
+// a camera worked out among the orbits, carried round with the turning globe
+const turned = (cam, ang) => ({dir: cam.dir.clone().applyAxisAngle(Y_AXIS, ang), dist: cam.dist, target: cam.target.clone().applyAxisAngle(Y_AXIS, ang)});
+
 // Days per second of tour time at t, for the size of the "just arrived" flash.
 export const tourSpeed = (t) => Math.abs(tourDay(t + 0.05) - tourDay(t - 0.05)) / 0.1;
 
@@ -364,7 +373,7 @@ const WIDE = 12; // far enough out to take in the geostationary ring
 // close to the swarm, rises over the pole where the old rocket bodies and fragments crowd the polar orbits, and eases
 // back; under the who card it swings low around the far side and back out; behind the finale it backs off to take in
 // everything, and keeps drawing back slowly as the globe returns for the last line. Keys are fractions of each card,
-// so they fit whatever the narration's length. Distance eases in log space; az is added to the slow turn.
+// so they fit whatever the narration's length. Distance eases in log space; az swings the camera against the globe's turn.
 const CLOSE = (() => {
   if (!TODAY) return null;
   const t0 = TODAY.b + GAP;
@@ -396,15 +405,16 @@ function shipShot(beat, t, az, el) {
   const k = smooth(clamp01((t - beat.a) / Math.max(6, beat.b - beat.a)));
   const lerp = (x, y) => x + (y - x) * k;
   const move = SHIP_ORDER[beat.key] % 3;
-  if (move === 0) return {dir: sphericalDir(az + lerp(-18, 4), el + lerp(-7, 7)), dist: 2.6 * (3.75 / 2.6) ** k, target: new THREE.Vector3()};
-  if (move === 1) return {dir: sphericalDir(az + lerp(-30, 12), el + lerp(9, -3)), dist: lerp(3.55, 3.25), target: new THREE.Vector3()};
-  return {dir: sphericalDir(az + lerp(8, -12), el + lerp(10, 2)), dist: 3.9 * (2.95 / 3.9) ** k, target: new THREE.Vector3()};
+  // the camera holds its bearing (a touch against the turn) and the turning globe carries the site across the frame
+  if (move === 0) return {dir: sphericalDir(az + lerp(3, -3), el + lerp(-7, 7)), dist: 2.6 * (3.75 / 2.6) ** k, target: new THREE.Vector3()};
+  if (move === 1) return {dir: sphericalDir(az + lerp(3, -3), el + lerp(9, -3)), dist: lerp(3.55, 3.25), target: new THREE.Vector3()};
+  return {dir: sphericalDir(az + lerp(3, -3), el + lerp(10, 2)), dist: 3.9 * (2.95 / 3.9) ** k, target: new THREE.Vector3()};
 }
 // The cold open's camera: out from the globe as the years fill it, then a slow turn around today's swarm.
 function introCam(t) {
   const grow = smooth(clamp01((t - INTRO.grow[0]) / (INTRO.grow[1] - INTRO.grow[0])));
   const hold = smooth(clamp01((t - INTRO.grow[1]) / (INTRO.rewind[0] - INTRO.grow[1])));
-  return {dir: sphericalDir(20 + t * 4.5, 8 + 18 * grow - 6 * hold), dist: 3.2 * (10 / 3.2) ** grow - 3.4 * hold, target: new THREE.Vector3()};
+  return {dir: sphericalDir(20 - t * 1.0, 8 + 18 * grow - 6 * hold), dist: 3.2 * (10 / 3.2) ** grow - 3.4 * hold, target: new THREE.Vector3()};
 }
 
 // One camera per beat, crossfaded through the gaps. centreOf(key, day, sim, out) gives a cloud's centre;
@@ -418,11 +428,15 @@ const beatCamera = (beat, t, centreOf, spinAt) => {
     if (p) {
       // ride just behind the train as it strings out along its orbit; Earth rolls by underneath
       const k = smooth(clamp01((t - beat.a - 3) / (beat.b - beat.a - 3)));
-      return focusFrom(p, q, 2.3 + 0.35 * k, 0.75 + 0.2 * k, 0.8 - 0.1 * k);
+      return turned(focusFrom(p, q, 2.3 + 0.35 * k, 0.75 + 0.2 * k, 0.8 - 0.1 * k), tourTurn(t));
     }
   }
   if (beat.kind === 'ship') {
-    const site = siteLocal(SHIP[beat.key].site).applyAxisAngle(new THREE.Vector3(0, 1, 0), spinAt(sim));
+    // aim where the launch site will be a little before the middle of its card, so the turning globe carries it
+    // across the frame from left to right while the card is up
+    const inAt = plateIn(beat);
+    const tr = inAt + 0.4 * (beat.b - inAt);
+    const site = siteLocal(SHIP[beat.key].site).applyAxisAngle(Y_AXIS, spinAt(tourSim(tr)) + tourTurn(tr));
     const az = (Math.atan2(site.x, site.z) * 180) / Math.PI;
     const el = Math.max(-15, Math.min(42, (Math.asin(site.y) * 180) / Math.PI * 0.75 + 6));
     const shot = shipShot(beat, t, az, el);
@@ -433,14 +447,15 @@ const beatCamera = (beat, t, centreOf, spinAt) => {
     const p = centreOf(beat.key, day, sim, tmpA);
     const q = centreOf(beat.key, day, sim + 240, tmpB);
     const k = smooth(clamp01((t - (beat.a + 3.8)) / (beat.b - 0.4 - (beat.a + 3.8))));
-    return focusFrom(p, q, 2.45 + (4.6 - 2.45) * k, 0.75 + 0.85 * k, 0.42 - 0.3 * k);
+    return turned(focusFrom(p, q, 2.45 + (4.6 - 2.45) * k, 0.75 + 0.85 * k, 0.42 - 0.3 * k), tourTurn(t));
   }
   // today opens close in, in the thick of it, and pulls out to show everything around Earth; from there the closing
   // cards and the finale follow CLOSE above, turning slowly all the way to the end
   const u = t - TODAY.a;
   const out = smooth(clamp01((u - 1.6) / (TODAY.b - TODAY.a + GAP - 1.6)));
-  if (!CLOSE || t <= CLOSE.t0) return {dir: sphericalDir(395 + u * 2.2, 10 + 11 * out), dist: 2.35 * (WIDE / 2.35) ** out, target: new THREE.Vector3()};
-  return {dir: sphericalDir(395 + u * 2.2 + CLOSE.az(t), CLOSE.el(t)), dist: Math.exp(CLOSE.dist(t)), target: new THREE.Vector3()};
+  // (the camera drifts against the globe's turn, never with it, so the globe is seen to turn)
+  if (!CLOSE || t <= CLOSE.t0) return {dir: sphericalDir(395 - u * 1.0, 10 + 11 * out), dist: 2.35 * (WIDE / 2.35) ** out, target: new THREE.Vector3()};
+  return {dir: sphericalDir(395 - u * 1.0 - CLOSE.az(t), CLOSE.el(t)), dist: Math.exp(CLOSE.dist(t)), target: new THREE.Vector3()};
 };
 
 export function tourCamera(t, centreOf, spinAt) {
@@ -465,10 +480,11 @@ export function tourCamera(t, centreOf, spinAt) {
 
 // ------------------------------------------------------------ what's on screen
 // The spec plate showing at t: which ship, how visible, and how long it has been up.
+const plateIn = (beat) => beat.a + (beat.key === 'sputnik1' ? (INTRO ? INTRO.plate : 2.4) : beat.kind === 'breakup' ? 0.8 : 0.35);
 export function plateAt(t) {
   for (const beat of BEATS) {
     if (beat.kind !== 'ship' && beat.kind !== 'breakup' && beat.kind !== 'stats') continue;
-    const inAt = beat.a + (beat.key === 'sputnik1' ? (INTRO ? INTRO.plate : 2.4) : beat.kind === 'breakup' ? 0.8 : 0.35);
+    const inAt = plateIn(beat);
     if (t < inAt || t > beat.b + 0.15) continue;
     const opacity = smooth(clamp01(Math.min((t - inAt) / 0.6, (beat.b + 0.15 - t) / 0.6)));
     return {key: beat.key, kind: beat.kind, opacity, local: t - inAt};
