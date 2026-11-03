@@ -18,3 +18,4 @@ models/nasa/
 
 # GCAT downloads (npm run fetch-gcat)
 gcat/
+narration/__pycache__/

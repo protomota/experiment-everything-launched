@@ -40,6 +40,7 @@ const LIST = [
       ['Radio', '20.005 and 40.002 MHz'],
     ],
     body: 'The first artificial satellite. A polished aluminium sphere that did little more than beep, but anyone with a shortwave radio could hear it. Its batteries ran out after three weeks, and it burned up in January 1958.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/sputnik1.webp', caption: 'Sergei Korolev, Sputnik’s chief designer', credit: 'Photo: San Diego Air and Space Museum Archives', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:18_000038_Korolyov,_Sergei.jpg'},
     model: {src: 'build:sputnik', size: ['x', 0.58], view: [30, 12, 0.5], dim: 'bar'},
   },
   {
@@ -55,6 +56,7 @@ const LIST = [
       ['Orbit', '358 × 2,550 km'],
     ],
     body: 'The first American satellite. Its Geiger counter found that Earth is wrapped in belts of trapped radiation, now called the Van Allen belts. Explorer 1 sent data for four months and fell back to Earth in 1970.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/explorer1.webp', caption: 'James Van Allen at the University of Iowa', credit: 'Photo: Frederick W. Kent Collection, University of Iowa Archives', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Rockoon_Van_Allen.jpg'},
     model: {src: 'nasa:explorer-jupiter-c-rocket', size: ['y', 21.2], view: [25, 6, 0.86], dim: 'height'},
   },
   {
@@ -88,6 +90,7 @@ const LIST = [
       ['Orbit', '169 × 327 km'],
     ],
     body: 'Yuri Gagarin becomes the first human in space, circling Earth once in 108 minutes. The ball-shaped capsule had no way to land softly, so he ejected 7 km up and came down under his own parachute.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/vostok1.webp', caption: 'Yuri Gagarin, 1961', credit: 'Photo: Arto Jousi, Finnish Museum of Photography', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Yuri_Gagarin_(1961)_-_Restoration.jpg'},
     model: {src: 'build:vostok', size: ['y', 4.4], view: [35, 10, 0.72], dim: 'height'},
   },
   {
@@ -105,6 +108,7 @@ const LIST = [
       ['Rocket', 'Atlas LV-3B'],
     ],
     body: 'John Glenn becomes the first American to orbit Earth. A sensor warned that his heat shield had come loose, so he came home with the retro-rocket pack strapped on. The warning turned out to be a faulty switch.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/friendship7.webp', caption: 'John Glenn in his Mercury pressure suit', credit: 'Photo: NASA', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:View_of_Astronaut_John_Glenn_in_his_Mercury_pressure_suit.jpg'},
     model: {src: 'nasa:atlas-6-friendship-7', size: ['y', 3.3], view: [30, 8, 0.66], dim: 'height', paint: 'mercury'},
   },
   {
@@ -136,6 +140,7 @@ const LIST = [
       ['Flight', '10 h 41 min'],
     ],
     body: 'The first docking of two spacecraft in orbit, with an uncrewed Agena target. Minutes later a stuck thruster set the joined craft tumbling at nearly one turn a second. Armstrong undocked, regained control and brought Gemini 8 home early.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/gemini8.webp', caption: 'Neil Armstrong and David Scott head for Gemini 8, 1966', credit: 'Photo: NASA', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:KSC-66C-1863_Gemini-8_Astronauts_Neil_Armstrong_and_David_Scott_prepare_to_enter_elevator_at_Complex_19,_Cape_Kennedy_(104-KSC-66C-1863).jpg'},
     model: {src: 'nasa:gemini', size: ['y', 5.8], view: [32, 10, 0.7], dim: 'height'},
   },
   {
@@ -153,6 +158,7 @@ const LIST = [
       ['To the Moon', '48.6 t'],
     ],
     body: 'The rocket that took Apollo 11 to the Moon. Four days after launch, Neil Armstrong and Buzz Aldrin landed while Michael Collins orbited above. Saturn V flew 13 times between 1967 and 1973 and never lost a payload.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/apollo11.webp', caption: 'Buzz Aldrin on the Moon, photographed by Neil Armstrong', credit: 'Photo: NASA', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Aldrin_Apollo_11_original.jpg'},
     model: {src: 'nasa:saturn-v', size: ['y', 110.6], view: [20, 5, 0.88], dim: 'height', paint: 'saturn'},
   },
   {
@@ -184,6 +190,7 @@ const LIST = [
       ['Orbit', 'about 220 km'],
     ],
     body: 'At the height of the Cold War, an American Apollo and a Soviet Soyuz meet in orbit. Commanders Thomas Stafford and Alexei Leonov shake hands through the hatch. Soyuz still flies crews today, more than 50 years after its first flight.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/astp.webp', caption: 'Thomas Stafford and Alexei Leonov in orbit, 1975', credit: 'Photo: NASA', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:ASTP_handshake_-_cropped.jpg'},
     model: {src: 'nasa:apollo-soyuz', size: ['x', 21.6], view: [25, 22, 0.78], dim: 'bar'},
   },
   {
@@ -231,6 +238,7 @@ const LIST = [
       ['Servicing visits', '5, 1993–2009'],
     ],
     body: 'A telescope above the blur of the atmosphere, carried up by Discovery. Its main mirror was ground very slightly wrong; astronauts fitted corrective optics in 1993, and shuttle crews serviced it five times. 36 years on, it is still observing.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/hubble.webp', caption: 'The Pillars of Creation, seen by Hubble', credit: 'Image: NASA, ESA and the Hubble Heritage Team (STScI/AURA)', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Pillars_of_creation_2014_HST_WFC3-UVIS_full-res_denoised.jpg'},
     model: {src: 'nasa:hubble-space-telescope-a', size: ['y', 13.2], view: [30, 12, 0.72], dim: 'height', paint: 'hubble'},
   },
   {
@@ -247,6 +255,7 @@ const LIST = [
       ['Crewed since', 'Nov 2, 2000'],
     ],
     body: 'Assembly began with Russia\'s Zarya module. Built by the US, Russia, Europe, Japan and Canada, the station has had people aboard every day since November 2000, longer than any other spacecraft. It is due to be retired around 2030.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/iss.webp', caption: 'Bill Shepherd, Yuri Gidzenko and Sergei Krikalev, the station’s first crew, 2000', credit: 'Photo: NASA', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:The_Expedition_1_crew_members_pose_for_final_photos_prior_to_their_launch.jpg'},
     model: {src: 'nasa:international-space-station-iss-a', size: ['x', 109], view: [30, 22, 0.78], dim: 'bar', paint: 'iss'},
   },
   {
@@ -263,6 +272,7 @@ const LIST = [
       ['Rocket', 'Long March 2F'],
     ],
     body: 'Yang Liwei makes China the third country to send a person into orbit on its own rocket. The three-part Shenzhou looks like Soyuz but is larger, and its orbital module kept flying on its own after he landed. China now runs its own space station, Tiangong.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/shenzhou5.webp', caption: 'Yang Liwei on his way to launch, 2003', credit: 'Photo: China News Service, CC BY 3.0', license: 'CC BY 3.0', page: 'https://commons.wikimedia.org/wiki/File:Shenzhou_5_walkout_Yang_Liwei.png'},
     model: {src: 'build:shenzhou', size: ['y', 9.25], view: [35, 10, 0.78], dim: 'height'},
   },
   {
@@ -328,6 +338,7 @@ const LIST = [
       ['Seats', '4, up to 7'],
     ],
     body: 'The first spacecraft built by a private company to carry astronauts into orbit, and the first crew launch from the US since the last Shuttle in 2011. Dragon capsules land under parachutes at sea and fly again.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/crewdragon.webp', caption: 'Bob Behnken and Doug Hurley, the first crew, 2020', credit: 'Photo: NASA / Bill Ingalls', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:SpaceX_Demo-2_Crew_Walkout_(NHQ202005270012).jpg'},
     model: {src: 'build:dragon', size: ['y', 8.1], view: [35, 10, 0.76], dim: 'height'},
   },
   {
@@ -361,6 +372,7 @@ const LIST = [
       ['Closest to the Moon', '6,545 km, over the far side'],
     ],
     body: 'The first people to fly to the Moon since Apollo 17 in 1972. Four astronauts, among them the first woman and the first Canadian to leave Earth orbit, looped around the far side of the Moon in an Orion capsule and splashed down off San Diego. On the way they went farther from Earth than anyone ever had, beating Apollo 13\'s record. Artemis I flew the same rocket without a crew in 2022.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/artemis2.webp', caption: 'Reid Wiseman, Victor Glover, Christina Koch and Jeremy Hansen', credit: 'Photo: NASA / Josh Valcarcel', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Artemis_2_Crew_Portrait.jpg'},
     model: {src: 'build:sls', size: ['y', 98.1], view: [30, 8, 0.86], dim: 'height'},
   },
   {
@@ -411,6 +423,7 @@ const LIST = [
       ['Orbit', '164 × 212 km'],
     ],
     body: 'Valentina Tereshkova becomes the first woman in space. She flew alone for almost three days, longer than all six Mercury flights put together, and ejected and came down by parachute, as Gagarin had. The next woman did not fly until 1982.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/vostok6.webp', caption: 'Valentina Tereshkova', credit: 'Photo: RIA Novosti archive / Alexander Mokletsov, CC BY-SA 3.0', license: 'CC BY-SA 3.0', page: 'https://commons.wikimedia.org/wiki/File:RIAN_archive_612748_Valentina_Tereshkova.jpg'},
     model: {src: 'build:vostok', size: ['y', 4.4], view: [215, 10, 0.72], dim: 'height'},
   },
   {
@@ -428,6 +441,7 @@ const LIST = [
       ['Orbit', '167 × 475 km'],
     ],
     body: 'Alexei Leonov makes the first spacewalk, out through an airlock that inflated from the side of the capsule. In the vacuum his suit ballooned so stiff that he could not get back in until he let some of its air out. They landed 386 km off course, in snowy forest near Perm, and spent two nights there before rescuers reached them.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/voskhod2.webp', caption: 'Alexei Leonov', credit: 'Photo: NASA', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Alexei_Leonov.jpg'},
     model: {src: 'build:voskhod2', size: ['y', 6.15], view: [40, 12, 0.74], dim: 'bar'},
   },
   {
@@ -445,6 +459,7 @@ const LIST = [
       ['Orbit', '197 × 223 km'],
     ],
     body: 'The first crewed Soyuz, and the first death during a spaceflight. On the way home the main parachute failed to open and the reserve tangled with the drogue, and Vladimir Komarov was killed when the capsule hit the ground. Redesigned, Soyuz has flown ever since: more than 140 flights, longer than any other crewed spacecraft.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/soyuz1.webp', caption: 'Vladimir Komarov with his wife Valentina and daughter Irina', credit: 'Photo: Smithsonian Institution', license: 'No restrictions', page: 'https://commons.wikimedia.org/wiki/File:Vladimir_Mikhaylovich_Komarov_(1927-1967),_his_wife_Valentina_Komarov,_and_their_daughter_Irina.jpg'},
     model: {src: 'build:soyuz', size: ['y', 7.91], view: [35, 12, 0.76], dim: 'bar'},
   },
   {
@@ -615,6 +630,7 @@ const LIST = [
       ['Rocket', 'Ariane 5'],
     ],
     body: 'The largest telescope ever flown, made to see in infrared. It was folded to fit inside an Ariane 5 and unfolded on the way to its spot 1.5 million km from Earth, where its sunshield keeps the mirror colder than −220 °C. It sees galaxies from the first few hundred million years after the Big Bang.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/jwst.webp', caption: 'Webb’s first deep field, 2022', credit: 'Image: NASA, ESA, CSA and STScI', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Webb%27s_First_Deep_Field.jpg'},
     model: {src: 'nasa:james-webb-space-telescope-b', size: ['z', 21.2], view: [-35, 22, 0.84], dim: 'bar'},
   },
   {
@@ -682,6 +698,7 @@ const LIST = [
       ['Rocket', 'Sputnik (R-7)'],
     ],
     body: 'A month after Sputnik 1, the first animal to orbit Earth. There was no way to bring Laika home, and the cabin overheated: she died within hours, which was only made public in 2002. The satellite never separated from its rocket stage and burned up on April 14, 1958.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/sputnik2.webp', caption: 'Laika, 1957', credit: 'Photo: Museum of Cosmonautics / Glavarchiv Moscow, CC BY 4.0', license: 'CC BY 4.0', page: 'https://commons.wikimedia.org/wiki/File:Laika_in_1957.jpg'},
     model: {src: 'build:sputnik2', size: ['y', 4], view: [30, 10, 0.8], dim: 'height'},
   },
   {
@@ -699,6 +716,7 @@ const LIST = [
       ['Rocket', 'Thor-Able'],
     ],
     body: 'The first successful weather satellite. Over two and a half months it sent down nearly 23,000 television pictures of clouds, about 19,000 of them good enough for forecasters, until it fell silent on June 15, 1960. Every weather satellite since descends from it. It is still in orbit.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/tiros1.webp', caption: 'One of TIROS-1’s first pictures of Earth, 1960', credit: 'Image: NASA', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:First_television_images_of_Earth_from_space;_northeastern_North_America.jpg'},
     model: {src: 'build:tiros1', size: ['x', 1.19], view: [30, 22, 0.66], dim: 'bar'},
   },
   {
@@ -800,6 +818,7 @@ const LIST = [
       ['Rocket', 'Atlas-Centaur'],
     ],
     body: 'The first spacecraft to cross the asteroid belt and the first to fly past Jupiter, at 132,000 km. It carries a gold-anodised plaque showing who sent it and from where. It is coasting out of the Solar System toward the star Aldebaran.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/pioneer10.webp', caption: 'The plaque on Pioneer 10', credit: 'Image: NASA. Design by Carl Sagan and Frank Drake, art by Linda Salzman Sagan', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Pioneer10-plaque.jpg'},
     model: {src: 'nasa:pioneer-10', size: ['y', 8.247], view: [30, 12, 0.8], dim: 'bar'},
   },
   {
@@ -816,6 +835,7 @@ const LIST = [
       ['Rocket', 'Titan IIIE-Centaur'],
     ],
     body: 'The first spacecraft to land on Mars and keep working: a Soviet lander had touched down in 1971 but fell silent within seconds. Its orbiter mapped the planet while the lander sent the first pictures from the surface and tested the soil for life, with results still argued over. It lasted more than six years.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/viking1.webp', caption: 'The first picture from the surface of Mars, 1976', credit: 'Image: NASA', license: 'No restrictions', page: 'https://commons.wikimedia.org/wiki/File:First_Mars_Surface_Photo_(9467449402).jpg'},
     model: {src: 'nasa:viking-lander', size: ['y', 2.1], view: [30, 14, 0.74], dim: 'bar'},
   },
   {
@@ -898,6 +918,7 @@ const LIST = [
       ['Rocket', 'Space Shuttle Columbia'],
     ],
     body: 'The third Great Observatory sees the X-rays given off by black holes, exploding stars and galaxy clusters. Columbia carried it up with its booster stage, the heaviest payload the Shuttle ever launched, on the first Shuttle flight commanded by a woman, Eileen Collins. Its long orbit takes it a third of the way to the Moon. It is still observing.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/chandra.webp', caption: 'Eileen Collins, the first woman to command a Shuttle', credit: 'Photo: NASA / Robert Markowitz', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Commander_Eileen_Collins_-_GPN-2000-001177.jpg'},
     model: {src: 'nasa:chandra-x-ray-observatory', size: ['x', 13.8], view: [30, 15, 0.8], dim: 'bar'},
   },
   {
@@ -915,6 +936,7 @@ const LIST = [
       ['Rocket', 'Ariane 5G+'],
     ],
     body: 'After ten years and four planetary flybys, it caught comet 67P/Churyumov–Gerasimenko and flew alongside it for two years. Its lander, Philae, made the first landing on a comet, bouncing twice before it came to rest in a shadow. At the end Rosetta was set down on the comet too.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/rosetta.webp', caption: 'Comet 67P, photographed by Rosetta, 2014', credit: 'Image: ESA/Rosetta/NAVCAM, CC BY-SA IGO 3.0', license: 'CC BY-SA 3.0 igo', page: 'https://commons.wikimedia.org/wiki/File:Comet_67P_on_19_September_2014_NavCam_mosaic.jpg'},
     model: {src: 'nasa:rosetta', size: ['x', 32], view: [30, 15, 0.84], dim: 'bar'},
   },
   {
@@ -947,6 +969,7 @@ const LIST = [
       ['Rocket', 'Atlas V 551'],
     ],
     body: 'The first spacecraft to reach Jupiter on solar power, with wings large enough to work at five times Earth\'s distance from the Sun. It swoops over Jupiter\'s poles on long orbits, its electronics in a titanium vault against the radiation, and has looked under the clouds at the planet\'s interior. It carried three small LEGO figures.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/juno.webp', caption: 'Jupiter, seen by Juno', credit: 'Image: NASA/JPL-Caltech/SwRI/MSSS', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Jupiter_Down_Under.tif'},
     model: {src: 'nasa:juno-a', size: ['z', 18.543], view: [30, 22, 0.84], dim: 'bar'},
   },
   {
@@ -1029,6 +1052,7 @@ const LIST = [
       ['Rocket', 'Atlas V 541'],
     ],
     body: 'Explores an old river delta on Mars, looking for signs of ancient life and sealing rock samples in tubes for a future mission to bring home. It carried Ingenuity, a small helicopter that made the first powered flight on another planet on April 19, 2021, and flew 72 times. It also made oxygen from the Martian air.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/perseverance.webp', caption: 'Ingenuity on Mars, photographed by Perseverance', credit: 'Image: NASA/JPL-Caltech/ASU, processed by Simeon Schmauß, CC BY 2.0', license: 'CC BY 2.0', page: 'https://commons.wikimedia.org/wiki/File:NASA%27s_Ingenuity_helicopter_on_Mars_by_Perseverance_Mastcam-Z,_Sol_768_(53475637956).jpg'},
     model: {src: 'nasa:mars-2020-perseverance-rover', size: ['z', 2.9], view: [35, 15, 0.74], dim: 'bar'},
   },
   // ---- batch 3 (2026-11-01): facts from each craft's Wikipedia article (listed under Sources)
@@ -1062,6 +1086,7 @@ const LIST = [
       ['Rocket', 'Luna (8K72)'],
     ],
     body: 'The first pictures of the far side of the Moon, the side that never faces Earth. It photographed it while swinging behind, developed the film on board and radioed the scans home. The film had been taken from American spy balloons that came down in the Soviet Union. It was also the first spacecraft to use a gravity assist.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/luna3.webp', caption: 'The first picture of the Moon’s far side, 1959', credit: 'Image: OKB-1, Luna 3', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Luna_3_moon.jpg'},
     model: {src: 'build:luna3', size: ['y', 1.3], view: [30, 15, 0.66], dim: 'bar'},
   },
   {
@@ -1079,6 +1104,7 @@ const LIST = [
       ['Rocket', 'Mercury-Redstone'],
     ],
     body: 'The first American in space, three weeks after Gagarin. Alan Shepard rode a 15-minute arc out over the Atlantic and back, and was the first to steer a spacecraft by hand. After nearly three hours of holds on the pad he had to wet his suit. The capsule came back in such good shape that engineers said it could have flown again. It is in the National Air and Space Museum.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/freedom7.webp', caption: 'Alan Shepard, 1961', credit: 'Photo: NASA', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Alan_B._Shepard_Jr._1961_portrait.jpg'},
     model: {src: 'build:freedom7', size: ['y', 25.41], view: [30, 6, 0.86], dim: 'height'},
   },
   {
@@ -1292,6 +1318,7 @@ const LIST = [
       ['Rocket', 'Falcon 9 v1.0'],
     ],
     body: 'The first commercial spacecraft to visit the International Space Station. Astronaut Don Pettit caught it with the station\'s robot arm and berthed it to the Harmony module. It was the first American craft at the station since the Shuttle retired, and it led to twenty Dragon supply runs and, eight years later, to Crew Dragon.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/dragonc2.webp', caption: 'Don Pettit', credit: 'Photo: NASA / Bill Ingalls', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Don_Pettit_2024_(portrait_crop).jpg'},
     model: {src: 'build:dragon1', size: ['y', 6.1], view: [30, 14, 0.8], dim: 'bar'},
   },
   {
@@ -1309,6 +1336,7 @@ const LIST = [
       ['Rocket', 'Atlas V 411'],
     ],
     body: 'The first American mission to bring back pieces of an asteroid. It orbited Bennu just 1.75 km up, closer than any spacecraft has orbited anything, then touched the surface to grab a sample. The capsule landed in Utah with 121.6 grams, holding 14 of the 20 amino acids that make up proteins. Renamed OSIRIS-APEX, it is on its way to Apophis.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/osirisrex.webp', caption: 'Bennu, seen by OSIRIS-REx', credit: 'Image: NASA/Goddard/University of Arizona', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Bennu_mosaic_OSIRIS-REx_(square).png'},
     model: {src: 'nasa:osiris-rex', size: ['z', 6.17], view: [30, 15, 0.8], dim: 'bar', paint: 'cells'},
   },
   {
@@ -1358,6 +1386,7 @@ const LIST = [
       ['Rocket', 'Falcon 9'],
     ],
     body: 'The first test of defending Earth by knocking an asteroid off course. It steered itself head-on into Dimorphos, a 160 m moonlet circling a larger asteroid. The hit shortened Dimorphos\'s orbit by 32 minutes, when 73 seconds would have counted as a success, and threw out a tail of debris at least 30,000 km long.',
+    photo: {src: 'https://media.protomota.com/everything-launched/photos/dart.webp', caption: 'Dimorphos, in DART’s last full picture', credit: 'Image: NASA/Johns Hopkins APL', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Last_image_showing_all_of_Dimorphos_by_DART.png'},
     model: {src: 'build:dart', size: ['x', 19.6], view: [30, 20, 0.84], dim: 'bar'},
   },
 ];

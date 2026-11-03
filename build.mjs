@@ -3,6 +3,7 @@
 //   SITE=1 node build.mjs                                  the copy for a web server (dist/site/), models as files
 //   GA_ID=G-XXXX SITE=1 node build.mjs                     ... with Google Analytics (GA_SCRIPT=/x.js to configure it
 //                                                          from your own script, as protomota.com does with /analytics.js)
+//   DOC_URL=https://youtu.be/... SITE=1 node build.mjs      ... with the "Watch the documentary" card above the title
 // Ship models: the site copy loads them from models/ next to the page (dist/site/models/); the offline copy inlines them.
 // The share card's address is SITE_URL + card.png; the page's own address is SITE_URL without the trailing slash.
 import fs from 'node:fs';
@@ -39,6 +40,8 @@ const bundle = await esbuild.build({
   legalComments: 'none',
 });
 // NARR=narration/timing.json: the video build with each beat fitted to its narration, written to dist/narrated.html
+// (PHOTOS=<file from tools/photos.mjs> adds the archive photos and ABOUT=<file from tools/about.mjs> the intro, which
+// only the video shows)
 const NARR = process.env.NARR ? JSON.parse(fs.readFileSync(process.env.NARR, 'utf8')) : null;
 // the milestone satellites' rows in the catalog, so the tour can draw their orbits without the search index
 const SAT_ROWS = (() => {
@@ -48,7 +51,7 @@ const SAT_ROWS = (() => {
   const links = JSON.parse(fs.readFileSync('src/ships/objects.json', 'utf8'));
   return Object.fromEntries(Object.entries(links).filter(([, v]) => Array.isArray(v) && row.has(String(v[0][0]))).map(([k, v]) => [k, row.get(String(v[0][0]))]));
 })();
-const script = `window.__SAT_ROWS=${JSON.stringify(SAT_ROWS)};\n` + (NARR ? `window.__TOUR_DUR=${JSON.stringify(NARR.dur)};window.__TOUR_GAP=${NARR.gap || 1.5};window.__TOUR_FINALE=${JSON.stringify(NARR.finale || null)};window.__TOUR_ORDER=${JSON.stringify(NARR.order || null)};\n` : '') + bundle.outputFiles[0].text.replaceAll('</script', '<\\/script');
+const script = `window.__SAT_ROWS=${JSON.stringify(SAT_ROWS)};\n` + (NARR ? `window.__TOUR_DUR=${JSON.stringify(NARR.dur)};window.__TOUR_GAP=${NARR.gap || 1.5};window.__TOUR_FINALE=${JSON.stringify(NARR.finale || null)};window.__TOUR_ORDER=${JSON.stringify(NARR.order || null)};\n` : '') + (NARR && process.env.PHOTOS ? `window.__PHOTOS=${fs.readFileSync(process.env.PHOTOS, 'utf8')};\n` : '') + (NARR && process.env.ABOUT ? `window.__ABOUT=${fs.readFileSync(process.env.ABOUT, 'utf8')};\n` : '') + bundle.outputFiles[0].text.replaceAll('</script', '<\\/script');
 // the NASA models the ships use (the rest are drawn in code), plus those the code-built Shuttle and Freedom 7 load
 const shipsSrc = fs.readFileSync('src/ships/ships.js', 'utf8');
 const MODEL_NAMES = [...new Set([...shipsSrc.matchAll(/src: 'nasa:([a-z0-9-]+)'/g)].map((m) => m[1]).concat(['space-shuttle-d', 'space-shuttle-d-door-prt', 'space-shuttle-d-door-stb', 'redstone-3-freedom-7']))];
@@ -80,10 +83,23 @@ const SOURCES = await (async () => {
     <div><h3>3D models</h3><p>From ${a(SRC.MODELS_HOME)}, public domain. The other ships were built for this page from the dimensions and photographs in their sources.</p><ul>${SRC.MODELS.map((l) => `<li>${a(l)}</li>`).join('')}</ul></div>
     <div><h3>Debris and space junk</h3><ul>${SRC.DEBRIS.map(([n, l]) => named(n, l)).join('')}</ul></div>
   </div>
+  <h3>Archive photos</h3>
+  <p>Shown on the cards and in the documentary, cropped to fit. Each links to its file page on Wikimedia Commons with its full license.</p>
+  <ul class="src-ships">${SHIPS.filter((s) => s.photo).map((s) => `<li><b>${esc(s.title)}</b> ${a([`${s.photo.caption}. ${s.photo.credit}${/CC BY/.test(s.photo.credit) ? '' : `, ${s.photo.license === 'No restrictions' ? 'no known copyright restrictions' : s.photo.license.toLowerCase()}`}`, s.photo.page])}</li>`).join('')}</ul>
   <h3>Spacecraft and rockets</h3>
   <ul class="src-ships">${SHIPS.map((s) => named(s.title, SRC.SHIPS[s.key])).join('')}</ul>
 </section>`;
 })();
+
+// the "Watch the documentary" card at the top of the title, on the site copy only: DOC_URL=<YouTube link> (and DOC_META
+// for its small line); the thumbnail is documentary-thumb.webp beside the page on the site
+const DOC_LINK = process.env.SITE && process.env.DOC_URL
+  ? `
+        <a class="doc-link" href="${process.env.DOC_URL}" target="_blank" rel="noopener" data-ga="documentary_click">
+          <span class="doc-thumb"><img src="${new URL(SITE_URL).pathname}documentary-thumb.webp" width="960" height="540" alt="" decoding="async"></span>
+          <span class="doc-text"><span class="doc-k">New · Documentary</span><span class="doc-t">Watch the documentary</span><span class="doc-m">${process.env.DOC_META || '34 min · narrated · 4K on YouTube'}</span></span>
+        </a>`
+  : '';
 
 const updated = (() => {
   const [, y, mon, d] = meta.updated.match(/(\d{4}) (\w{3})\s+(\d+)/);
@@ -99,6 +115,7 @@ const page = fs.readFileSync('src/index.html', 'utf8')
   .replaceAll('%LOGO%', `data:image/png;base64,${inline('src/protomota-logo.png')}`)
   .replace('%ANALYTICS%', () => ANALYTICS)
   .replaceAll('%PAGE_URL%', PAGE_URL)
+  .replace('%DOC_LINK%', () => DOC_LINK)
   .replaceAll('%SITE_URL%', SITE_URL)
   .replaceAll('%EVER%', meta.count.toLocaleString('en-US'))
   .replaceAll('%LAUNCHES%', JSON.parse(fs.readFileSync('src/launches.json', 'utf8')).dt.length.toLocaleString('en-US'))
@@ -109,7 +126,7 @@ const page = fs.readFileSync('src/index.html', 'utf8')
 const kb = (n) => `${(n / 1024).toFixed(0)} KB`;
 fs.mkdirSync('dist', {recursive: true});
 // NARR=narration/timing-social.json writes dist/narrated-social.html
-const OUT = process.env.SITE ? 'dist/site/index.html' : NARR ? `dist/narrated${(process.env.NARR.match(/timing(-\w+)\.json$/) || [, ''])[1]}.html` : 'dist/index.html';
+const OUT = process.env.SITE ? 'dist/site/index.html' : NARR ? `dist/narrated${(process.env.NARR.match(/timing(-[\w-]+)\.json$/) || [, ''])[1]}.html` : 'dist/index.html';
 fs.mkdirSync('dist/site', {recursive: true});
 fs.writeFileSync(OUT, page);
 if (process.env.SITE) {

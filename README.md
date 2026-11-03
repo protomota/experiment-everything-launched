@@ -134,7 +134,9 @@ tools/           models.mjs, milestone-objects.mjs, narrate.mjs, record.mjs, car
 
 1. Add an entry to `src/ships/ships.js`: `key`, `when` (UTC launch time), `title`, `kind`, `site` (a key of
    `SITES`), `specs`, `body` and `model` (`src` is a file in `models/web/` or `build:<name>` for a ship built in
-   `src/ships/build.js`; `size` scales it to its real dimension; `view` is the card's starting angle).
+   `src/ships/build.js`; `size` scales it to its real dimension; `view` is the card's starting angle). An optional
+   `photo` (`src`, `caption`, `credit`, `license`, `page`) shows an archive photo on the card: a 4:5 WebP at
+   800 x 1000, with a 400 x 500 copy named `<key>-400.webp` beside it.
 2. For a NASA model, put the original in `models/nasa/` and run `node tools/models.mjs <name>`.
 3. Add its sources to `SHIPS` in `src/sources.js` (and the model to `MODELS` if it's NASA's). The build stops if a
    ship has no sources.
@@ -179,10 +181,11 @@ from the clips.
 ## Deploying to protomota.com
 
 ```sh
-GA_ID=G-DRL62HKS7W GA_SCRIPT=/analytics.js npm run build:site
+GA_ID=G-DRL62HKS7W GA_SCRIPT=/analytics.js DOC_URL=https://youtu.be/<id> npm run build:site
 ```
 
-Copy `dist/site/` into the protomota-com repo at `public/experiments/everything-launched/` (keep its `card.png`).
+Copy `dist/site/` into the protomota-com repo at `public/experiments/everything-launched/` (keep its `card.png` and
+`documentary-thumb.webp`). `DOC_URL` adds the "Watch the documentary" card above the title; leave it out to hide it.
 Without `GA_ID` the site build has no analytics; with `GA_ID` alone the page configures Google Analytics itself.
 
 ## Credits and licenses
@@ -194,6 +197,7 @@ others, under their own terms:
 | --- | --- | --- |
 | Catalog and launch data, and the files baked from it (`src/catalog.*`, `src/launches.json`, `src/search.txt`, `bake/*.json`) | [GCAT](https://planet4589.org/space/gcat/) by Jonathan C. McDowell | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): credit GCAT and its author ([acknowledgement](https://planet4589.org/space/gcat/web/intro/ack.html)) |
 | 3D models in `models/web/` | [NASA 3D Resources](https://github.com/nasa/NASA-3D-Resources); the Opportunity rover is NASA/JPL-Caltech's [Spirit and Opportunity model](https://science.nasa.gov/resource/spirit-and-opportunity-rover-3d-model/) | Free to use under [NASA's media usage guidelines](https://www.nasa.gov/multimedia/guidelines/index.html); don't imply NASA endorsement |
+| Archive photos on the cards (`photo` in `src/ships/ships.js`, served from media.protomota.com) | Wikimedia Commons; each photo's author and file page are in its `photo` entry and the page's Sources list | Public domain, CC BY or CC BY-SA, as given for each photo; not covered by the MIT License |
 | Coastlines | [Natural Earth](https://www.naturalearthdata.com/) via [world-atlas](https://github.com/topojson/world-atlas) | Public domain (Natural Earth), ISC (world-atlas) |
 | Fonts bundled into the page | [Space Grotesk](https://github.com/floriankarsten/space-grotesk) and [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) via Fontsource | SIL Open Font License 1.1 |
 | Libraries | [three.js](https://threejs.org/), [topojson-client](https://github.com/topojson/topojson-client), [esbuild](https://esbuild.github.io/), [glTF Transform](https://gltf-transform.dev/) | MIT, ISC, MIT, MIT |

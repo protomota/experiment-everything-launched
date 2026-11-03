@@ -17,10 +17,10 @@ const GAP = Number(process.env.GAP || 1.2); // between beats (the page's own tou
 const KEYS = process.env.KEYS ? process.env.KEYS.split(',') : null;
 const NAME = process.env.NAME ? `-${process.env.NAME}` : '';
 // the shortest a beat can be, whatever its line: breakups need time for the collision and the cloud to spread
-const MIN = {ship: 6, breakup: 11, today: 6, stats: 10, lineup: 10, open: 6, close: 6};
-// except the finale, which holds on the globe for a few seconds after its last word (as does the 5-minute cut's last
-// line; its lineup comes first, and the row runs off and the globe comes back in those seconds)
-const HOLD_AFTER = {lineup: 4.5, close: 4.5};
+const MIN = {ship: 6, breakup: 11, today: 6, stats: 10, lineup: 10, open: 6, close: 6, about: 8};
+// except the finale, which holds on the globe a moment after its last word, and the logo's wipe comes across in the
+// last of it (render.sh); it held 4.5 s and faded out (Brad, 3 Nov: tighten it up, no long delays)
+const HOLD_AFTER = {lineup: 1.6, close: 1.6};
 // but where the lineup opens the cut (the 5-minute cut), the next line follows it like any other: the row runs off,
 // the globe comes back and the clock rewinds to Sputnik in the usual pause between lines, with no hold of its own
 // (Brad: the long pause there should be a quick transition)
@@ -30,11 +30,11 @@ const LINEUP_FIRST = KEYS && KEYS.includes('sputnik1') && KEYS.indexOf('lineup')
 // the text when a clip has none
 const SCRIPT = Object.fromEntries(JSON.parse(fs.readFileSync(process.env.SCRIPT || 'narration/script.json', 'utf8')).map((s) => [s.key, s]));
 
-const PLAN = [...fs.readFileSync('src/tour.js', 'utf8').matchAll(/\['(ship|breakup|today|stats|lineup|open|close)', '(\w+)', ([\d.]+)\]/g)]
+const PLAN = [...fs.readFileSync('src/tour.js', 'utf8').matchAll(/\['(ship|breakup|today|stats|lineup|open|close|about)', '(\w+)', ([\d.]+)\]/g)]
   .map(([, kind, key, dur]) => ({kind, key, dur: Number(dur)}));
 const plan = KEYS
   ? KEYS.map((k) => PLAN.find((b) => b.key === k) || (() => { throw new Error(`no beat ${k} in src/tour.js`); })())
-  : PLAN.filter((b) => b.kind !== 'open' && b.kind !== 'close');
+  : PLAN.filter((b) => b.kind !== 'open' && b.kind !== 'close' && b.kind !== 'about');
 const clips = Object.fromEntries(fs.readdirSync(dir).filter((f) => /^\d+-\w+\.mp3$/.test(f)).map((f) => [f.replace(/^\d+-|\.mp3$/g, ''), path.join(dir, f)]));
 const missing = plan.filter((b) => !clips[b.key]).map((b) => b.key);
 if (missing.length) throw new Error(`no clip for ${missing.join(', ')}`);

@@ -18,6 +18,8 @@ import {EVENT_CARDS} from './ships/events.js';
 import {createLaunchPulses, decodeLaunches, lastLaunch, launchesBy, launchesByWho, perYear, siteDir} from './launches.js';
 import {buildSearch, norm, parseIndex} from './find.js';
 import LINKS from './ships/objects.json';
+import {hasPhotos, photoRoom, showPhotos} from './photos.js';
+import {aboutHud, aboutPulses, showAbout} from './about.js';
 
 const params = new URLSearchParams(location.search);
 const CAPTURE = params.has('capture') || window.__CAPTURE === true;
@@ -147,11 +149,33 @@ const spinAt = (sim) => GMST0 + EARTH_SPIN * sim;
 // The first Starlink train's place along its orbit is made up (the catalog has no phases), so it is put where the film
 // needs it: the middle of the train crosses the middle of the globe on screen just as the narration says "Watch them
 // string out along their orbit" (Brad: the string came into view only after the line, at the edge of the frame).
+// If the train's orbit doesn't pass in front of the camera at that moment (in the 5-minute cut it only came within 18
+// degrees, so the train ran along the bottom edge and behind the globe as the line said "watch them"; Brad, 3 Nov),
+// the card's camera first turns toward the orbit, just far enough that the train comes through the globe's middle.
+const AIM_KEEP = (3 * Math.PI) / 180;
 const alignTrain = (data, train, centreOf) => {
   const t = T.starlinkCross();
   if (t == null) return;
   const c = train[Math.floor(train.length / 2)];
   const [day, sim] = [T.tourDay(t), T.tourSim(t)];
+  {
+    const axis = new THREE.Vector3(0, 1, 0);
+    const turn = T.tourTurn(t);
+    const [p, q] = [new THREE.Vector3(), new THREE.Vector3()];
+    positionOf(data, c, day, sim, p);
+    positionOf(data, c, day, sim + (2 * Math.PI) / data.o1[c * 4 + 2] / 4, q);
+    const n = p.cross(q).normalize();
+    const cam = T.tourCamera(t, centreOf, spinAt);
+    const e = cam.dir.clone().applyAxisAngle(axis, -turn);
+    const off = Math.asin(Math.max(-1, Math.min(1, e.dot(n))));
+    if (Math.abs(off) > AIM_KEEP) {
+      const inPlane = e.clone().addScaledVector(n, -e.dot(n)).normalize();
+      const to = inPlane.multiplyScalar(Math.cos(AIM_KEEP)).addScaledVector(n, Math.sign(off) * Math.sin(AIM_KEEP)).applyAxisAngle(axis, turn);
+      const azEl = (v) => [(Math.atan2(v.x, v.z) * 180) / Math.PI, (Math.asin(v.y) * 180) / Math.PI];
+      const [[az0, el0], [az1, el1]] = [azEl(cam.dir), azEl(to)];
+      T.aimStarlink(((az1 - az0 + 540) % 360) - 180, el1 - el0);
+    }
+  }
   // where the camera is at that moment and which way it looks, among the orbits (which turn with T.tourTurn)
   const cam = T.tourCamera(t, centreOf, spinAt);
   const axis = new THREE.Vector3(0, 1, 0);
@@ -759,6 +783,21 @@ function main(data, tracks) {
     }
     actsEl.hidden = !actsEl.children.length;
   };
+  // the milestone's archive photo from its ship data: a print pinned to the model view (opened full size by openPhoto)
+  const fillPrint = (photo) => {
+    $('plate-print').hidden = !photo;
+    if (photo) $('plate-print-img').src = photo.src.replace(/\.webp$/, '-400.webp');
+  };
+  // ... and its caption and credit, in the large view and the full-size photo
+  const fillPhoto = (id, photo) => {
+    $(id).hidden = !photo;
+    if (!photo) return;
+    $(`${id}-img`).src = photo.src;
+    $(`${id}-img`).alt = photo.caption;
+    $(`${id}-cap`).textContent = photo.caption;
+    $(`${id}-credit`).textContent = photo.credit;
+    $(`${id}-credit`).href = photo.page;
+  };
   const fillPlate = (sh) => {
     const isEvent = !SHIP[sh.key];
     const found = !!sh.found;
@@ -783,6 +822,7 @@ function main(data, tracks) {
     $('plate-kind').textContent = sh.kind;
     $('plate-site').textContent = isEvent ? sh.place : `Launched from ${SITES[sh.site].name}`;
     $('plate-body').textContent = sh.body;
+    fillPrint(CAPTURE ? null : sh.photo);
     document.querySelector('.plate-scroll').scrollTop = 0;
     $('plate-main').scrollTop = 0;
     fillActs(sh);
@@ -1071,6 +1111,7 @@ function main(data, tracks) {
   };
   const lineupShips = LINEUP.map((k) => SHIP[k]);
   const titleEl = document.querySelector('.hud .title');
+  const transportEl = document.querySelector('.hud .transport');
   const showLineup = (opacity, spinDeg) => {
     const on = opacity > 0.002;
     lineupEl.classList.toggle('on', on);
@@ -1211,6 +1252,28 @@ function main(data, tracks) {
     renderer.render(scene, camera);
   };
 
+  // The video keeps the launch site well inside the frame: the camera slides the globe right just enough to hold the
+  // site SITE_EDGE px from the left (Brad, 3 Nov: launch sites ran a little off screen as the camera pushed in), and
+  // while an archive photo is up at the left, clear of the photo too. The site is placed where draw() will put it:
+  // its globe turns with the sim clock inside the world's turn.
+  const SITE_EDGE = 150; // CSS px from the left
+  const PHOTO_CLEAR = 560; // past the photo's right edge (476 px), with room for the marker's pulse
+  const keepSiteInView = (cam, t, siteKey, weight, room) => {
+    if (!siteKey || weight <= 0.001) return cam;
+    const v = T.siteLocal(siteKey).applyAxisAngle(Y_AXIS, spinAt(T.tourSim(t)) + T.tourTurn(t)).multiplyScalar(1.004);
+    camera.position.copy(cam.target).addScaledVector(cam.dir, cam.dist);
+    camera.up.set(0, 1, 0);
+    camera.lookAt(cam.target);
+    camera.updateMatrixWorld();
+    const x = ((v.clone().project(camera).x + 1) / 2) * innerWidth;
+    const least = SITE_EDGE + (PHOTO_CLEAR - SITE_EDGE) * room;
+    if (x >= least) return cam;
+    const depth = v.clone().sub(camera.position).dot(cam.dir.clone().negate());
+    const perUnit = innerHeight / 2 / (depth * Math.tan((camera.fov * Math.PI) / 360));
+    const right = new THREE.Vector3(0, 1, 0).cross(cam.dir).normalize();
+    return {...cam, target: cam.target.clone().addScaledVector(right, (-(least - x) / perUnit) * weight)};
+  };
+
   let blackEl = null;
   let glowT0 = null;
   const tourFrame = (t, {spin = 0, tilt = 0} = {}) => {
@@ -1222,7 +1285,6 @@ function main(data, tracks) {
     const roomAt = T.plateRoomAt(t);
     // on a phone held upright the card sits under the globe, so the camera backs off to fit the globe above it
     const cam0 = T.tourCamera(t, centreOf, spinAt);
-    const cam = phoneTourQ.matches ? {...cam0, dist: cam0.dist * (1 + 0.6 * roomAt)} : cam0;
     const p = T.plateAt(t);
     const lu = T.lineupAt(t);
     plate.classList.add('tour');
@@ -1231,7 +1293,13 @@ function main(data, tracks) {
     // show both); a rocket's or a probe's shows its launch site
     const satRow = p && p.kind === 'ship' && T.SAT_APO[p.key] ? SAT_ROWS[p.key] : null;
     const orbitIn = satRow != null ? T.satOrbitAt(p.key, t) : 0;
-    showMarker(p && p.kind === 'ship' ? SHIP[p.key].site : null, p ? p.opacity * (1 - orbitIn) : 0, p ? p.local : 0);
+    const siteKey = p && p.kind === 'ship' ? SHIP[p.key].site : null;
+    // (it is in place by the time the marker is a third of the way in, holds while the marker shows, and lets go as
+    // the orbit takes over)
+    const held = Math.min(1, (p ? p.opacity / 0.35 : 0), (1 - orbitIn) / 0.4);
+    const cam1 = CAPTURE ? keepSiteInView(cam0, t, siteKey, held * held * (3 - 2 * held), hasPhotos ? photoRoom(t) : 0) : cam0;
+    const cam = phoneTourQ.matches ? {...cam1, dist: cam1.dist * (1 + 0.6 * roomAt)} : cam1;
+    showMarker(siteKey, p ? p.opacity * (1 - orbitIn) : 0, p ? p.local : 0);
     const look = T.lookAt(t);
     uniforms.uKeep.value = look.keep;
     uniforms.uMode.value = Math.max(legendMode, look.mode);
@@ -1239,7 +1307,7 @@ function main(data, tracks) {
     // the tour (the narrated video and the page's own) shows no launch flashes: they lit up launch sites all over the
     // globe whenever the clock ran fast between ships. The only launch site it shows is the current ship's marker
     // (Brad: launch sites show only when the tour is talking about that launch).
-    pulses.points.visible = false;
+    pulses.points.visible = aboutPulses(t);
     uniforms.uHi.value = T.trainGlowAt(t);
     world.rotation.y = T.tourTurn(t);
     if (satRow != null && orbitIn > 0.001) {
@@ -1252,29 +1320,48 @@ function main(data, tracks) {
       const d = Math.min(Math.max(day, data.o1[satRow * 4 + 3] + 1 / 1440), data.o2[satRow * 4] - 1 / 1440);
       placeTourSat(satRow, d, sim, p.opacity * orbitIn);
     }
+    // the video lights the globe from over the camera's left shoulder, so the side facing the viewer is never the
+    // dark one (Brad, 3 Nov: the globe was too dark when its night side faced the camera); the page keeps the fixed sun
+    if (CAPTURE) {
+      const v = cam.target.clone().addScaledVector(cam.dir, cam.dist).normalize();
+      const left = new THREE.Vector3(0, 1, 0).cross(v);
+      if (left.lengthSq() < 1e-6) left.set(1, 0, 0);
+      left.normalize().negate();
+      earth.sun.copy(v).multiplyScalar(0.8).addScaledVector(left, 0.5).add(new THREE.Vector3(0, 0.35, 0)).normalize();
+    }
     draw(day, sim, flashFor(speed), cam, T.driftAt(t));
     hud(day, {showTime: speed < 3 && speed > 0.01});
     const c = T.captionAt(t);
     showCaption(c ? c.key : null, c ? c.opacity : 0);
     showPlate(p ? p.key : null, p ? p.opacity : 0, p ? p.local * 9 + spin : 0, {tilt, local: p ? p.local : 0, slide: p ? 1 - p.opacity : 0, tour: true});
+    if (CAPTURE) {
+      showPhotos(t);
+      showAbout(t, day, launchedBy(data, day), (d) => {
+        const x = dateOf(d);
+        const y0 = Date.UTC(x.getUTCFullYear(), 0, 1);
+        return x.getUTCFullYear() + (x.getTime() - y0) / (Date.UTC(x.getUTCFullYear() + 1, 0, 1) - y0);
+      });
+    }
     if (T.FINALE) showFinale(lu ? lu.opacity : 0, lu ? lu.local : 0);
     else showLineup(lu ? lu.opacity : 0, lu ? lu.local * 3 : 0);
     // the narrated video never shows the legend (the page's own tour does)
     legend.style.opacity = T.FINALE ? '0' : Math.max(1 - Math.max(room, lu ? lu.opacity : 0), T.legendAt(t)).toFixed(3);
     const under = phoneQ.matches && p ? 1 - p.opacity : 1;
     const luOp = lu ? lu.opacity : 0;
-    titleEl.style.opacity = Math.min(under, 1 - luOp).toFixed(3);
+    const hudIn = aboutHud(t);
+    transportEl.style.opacity = hudIn < 1 ? hudIn.toFixed(3) : '';
+    titleEl.style.opacity = (Math.min(under, 1 - luOp) * hudIn).toFixed(3);
     // the date and counts step aside for the lineup, which needs the bottom of the frame
-    readoutEl.style.opacity = luOp > 0.001 ? Math.min(under, 1 - luOp).toFixed(3) : (under < 1 ? under.toFixed(3) : '');
+    readoutEl.style.opacity = luOp > 0.001 ? (Math.min(under, 1 - luOp) * hudIn).toFixed(3) : (under < 1 || hudIn < 1 ? (under * hudIn).toFixed(3) : '');
     canvas.style.opacity = lu && lu.dim > 0.001 ? (1 - (T.FINALE ? 1 : 0.86) * lu.dim).toFixed(3) : '';
-    // the narrated video fades up from black and back down at the end
+    // the narrated video fades up from black; at the end the logo's wipe takes over (render.sh), so no fade out
     if (T.FINALE && CAPTURE) {
       if (!blackEl) {
         blackEl = document.createElement('div');
         blackEl.style.cssText = 'position:fixed;inset:0;background:#000;pointer-events:none;z-index:99';
         document.body.append(blackEl);
       }
-      blackEl.style.opacity = Math.max(0, 1 - t / 0.8, (t - (T.TOUR_DURATION - 1.8)) / 1.6).toFixed(3);
+      blackEl.style.opacity = Math.max(0, 1 - t / 0.8).toFixed(3);
     }
     return {day, cam};
   };
@@ -1298,6 +1385,19 @@ function main(data, tracks) {
       // own turn (both in degrees), the camera's distance and its elevation
       // (for checking: the slower clock the breakaway pieces' orbits turn on, as [day from, day to, how far between])
       drift: (ts) => ts.map((t) => T.driftAt(t)),
+      // (for checking the Starlink card: at each time where the first train's middle satellite is in the frame, in
+      // CSS pixels, and whether the globe hides it)
+      train: (ts) => ts.map((t) => {
+        tourFrame(t);
+        world.updateMatrixWorld();
+        camera.updateMatrixWorld();
+        const v = world.localToWorld(positionOf(data, tracks.starlink.index, T.shownDay(t), T.tourSim(t), new THREE.Vector3()));
+        const d = v.clone().sub(camera.position);
+        const k = -camera.position.dot(d) / d.lengthSq();
+        const hid = k > 0 && k < 1 && camera.position.clone().addScaledVector(d, k).length() < 1;
+        const n = v.project(camera);
+        return [t, Math.round(((n.x + 1) / 2) * innerWidth), Math.round(((1 - n.y) / 2) * innerHeight), hid ? 1 : 0];
+      }),
       // (for checking a breakup's view: at each time where each of its clouds' centres is in the frame, as x and y from
       // -1 to 1, and whether the globe hides it, then where Earth's centre is)
       cloud: (key, ts) => ts.map((t) => {
@@ -1340,6 +1440,18 @@ function main(data, tracks) {
         const cam = T.tourCamera(t, centreOf, spinAt);
         const pos = cam.target.clone().addScaledVector(cam.dir, cam.dist);
         return [t, (Math.atan2(pos.x, pos.z) * 180) / Math.PI, ((T.tourTurn(t) + spinAt(T.tourSim(t))) * 180) / Math.PI, cam.dist, (Math.asin(pos.y / pos.length()) * 180) / Math.PI];
+      }),
+      // (for checking that the launch site stays in view: at each time where the marker is in the frame, in CSS
+      // pixels, its opacity, and whether it is on the side of the globe facing the camera; null while it is hidden)
+      site: (ts) => ts.map((t) => {
+        tourFrame(t);
+        if (!marker.visible) return null;
+        world.updateMatrixWorld();
+        camera.updateMatrixWorld();
+        const v = marker.getWorldPosition(new THREE.Vector3());
+        const facing = v.clone().normalize().dot(camera.position.clone().sub(v)) > 0;
+        const n = v.clone().project(camera);
+        return [+(((n.x + 1) / 2) * innerWidth).toFixed(1), +(((1 - n.y) / 2) * innerHeight).toFixed(1), +markMat.opacity.toFixed(2), facing ? 1 : 0];
       }),
     };
     Promise.all(SHIPS.map((sh) => stageShips.load(sh))).then(() => {
@@ -1934,8 +2046,8 @@ function main(data, tracks) {
     let drag = null;
     plateView.addEventListener('pointerdown', (e) => {
       if (!live.card && live.mode !== 'tour') return;
-      // the large-view button is a button, not a place to start turning the model
-      if (e.target.closest('.plate-big')) return;
+      // the large-view button and the photo's print are buttons, not places to start turning the model
+      if (e.target.closest('.plate-big, .plate-print')) return;
       drag = {x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId};
       live.dragging = true;
       live.spinV = 0;
@@ -2017,6 +2129,7 @@ function main(data, tracks) {
     $('big-site').hidden = $('plate-site').hidden || !$('plate-site').textContent;
     $('big-specs').replaceChildren(...[...$('plate-specs').children].map((n) => n.cloneNode(true)));
     $('big-body').textContent = $('plate-body').textContent;
+    fillPhoto('big-photo', sh.photo);
     $('big-info').scrollTop = 0;
     $('big-hint').textContent = coarse.matches
       ? 'Drag to turn · pinch to zoom · two fingers to move · double-tap to start again'
@@ -2042,6 +2155,45 @@ function main(data, tracks) {
     stageShips.renderFree(big.ship, bigCam, bigControls.target, big.spin, bigView.clientWidth, bigView.clientHeight, dpr);
   };
   $('plate-big').addEventListener('click', openBig);
+
+  // the archive photo full size over the page; the timeline and the tour wait while it's open, as for the large view
+  const photoBox = $('photo-box');
+  let photoOpen = false;
+  const openPhoto = () => {
+    const sh = plateKey && CARD_OF(plateKey);
+    if (!sh || !sh.photo || CAPTURE) return;
+    if (live.mode !== 'tour') {
+      live.playing = false;
+      if (live.card) Object.assign(live.card, {until: 0, resume: false});
+      setPlayLabel();
+    }
+    $('photo-box-fig').textContent = `${$('plate-fig').textContent} · ${sh.title}`;
+    fillPhoto('photo-box', sh.photo);
+    photoOpen = true;
+    photoBox.hidden = false;
+    document.documentElement.style.overflow = 'hidden';
+    $('photo-box-close').focus();
+  };
+  const closePhoto = () => {
+    if (!photoOpen) return;
+    photoOpen = false;
+    photoBox.hidden = true;
+    document.documentElement.style.overflow = '';
+    $('plate-print').focus({preventScroll: true});
+  };
+  $('plate-print').addEventListener('click', openPhoto);
+  $('photo-box-close').addEventListener('click', closePhoto);
+  // a click anywhere but the photo's caption and credit closes it
+  photoBox.addEventListener('click', (e) => {
+    if (!e.target.closest('figcaption')) closePhoto();
+  });
+  photoBox.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePhoto();
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      (document.activeElement === $('photo-box-close') ? $('photo-box-credit') : $('photo-box-close')).focus();
+    }
+  });
   $('big-close').addEventListener('click', closeBig);
   bigView.addEventListener('dblclick', () => {
     if (big) big.framed = false;
@@ -2142,6 +2294,7 @@ function main(data, tracks) {
       renderBig(dt);
       return;
     }
+    if (photoOpen) return;
     if (live.mode === 'tour') {
       if (live.tourPlaying) live.tourT += dt;
       if (live.tourT >= T.TOUR_DURATION) {

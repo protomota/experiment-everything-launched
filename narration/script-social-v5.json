@@ -1,0 +1,212 @@
+[
+ {
+  "key": "about",
+  "text": "This is Everything We've Ever Launched, an experiment from Protomota. It runs on GCAT, the open catalog of everything in space, kept by the astronomer Jonathan McDowell. Every launch. Every piece of debris. And who put it all up there. This film is its guided tour.",
+  "say": "This is Everything We've Ever Launched, an experiment from Protomota. It runs on Gee Cat, the open catalog of everything in space, kept by the astronomer Jonathan McDowell. Every launch. Every piece of debris. And who put it all up there. This film is its guided tour."
+ },
+ {
+  "key": "open",
+  "text": "Since 1957, we have put more than sixty-nine thousand objects into orbit around the Earth. This is every one of them, one dot each. And it all started with just one."
+ },
+ {
+  "key": "sputnik1",
+  "text": "On October fourth, 1957, Sergei Korolev's team launched a polished aluminum sphere fifty-eight centimeters across. Sputnik did little more than beep. But anyone with a shortwave radio could hear it, and the space age had begun.",
+  "say": "On October fourth, 1957, Sergei Korolyov's team launched a polished aluminum sphere fifty-eight centimeters across. Sputnik did little more than beep. But anyone with a shortwave radio could hear it, and the space age had begun."
+ },
+ {
+  "key": "vostok1",
+  "text": "On April twelfth, 1961, Yuri Gagarin became the first human in space. He circled the Earth once, in a hundred and eight minutes. His capsule had no way to land softly, so seven kilometers up, he ejected, and came down under his own parachute."
+ },
+ {
+  "key": "apollo11",
+  "text": "This is the Saturn V, a hundred and ten meters tall. On July sixteenth, 1969, it launched Apollo 11. Four days later, Neil Armstrong and Buzz Aldrin landed on the Moon, while Michael Collins waited in orbit above. The Saturn V flew thirteen times, and never lost a payload.",
+  "say": "This is the Saturn Five, a hundred and ten meters tall. On July sixteenth, 1969, it launched Apollo 11. Four days later, Neil Armstrong and Buzz Aldrin landed on the Moon, while Michael Collins waited in orbit above. The Saturn Five flew thirteen times, and never lost a payload."
+ },
+ {
+  "key": "iss",
+  "text": "In November 1998, a Russian rocket launched Zarya, the first piece of the International Space Station. Built by the United States, Russia, Europe, Japan and Canada, the station has had people aboard every day since November 2000, longer than any other spacecraft."
+ },
+ {
+  "key": "starlink",
+  "text": "In May 2019, SpaceX launched its first sixty Starlink satellites, flat-packed and stacked on a single rocket. Watch them string out along their orbit. Today, more than eleven thousand are in orbit, about a third of everything up there."
+ },
+ {
+  "key": "jwst",
+  "text": "On Christmas Day 2021, the James Webb Space Telescope launched folded inside an Ariane 5, and unfolded on its way to a point one and a half million kilometers from Earth. Its gold mirror is six and a half meters across. It sees galaxies from the first few hundred million years after the Big Bang."
+ },
+ {
+  "key": "starship",
+  "text": "And in September 2026, on its fourteenth flight, Starship reached orbit for the first time. It is the largest and most powerful rocket ever flown, built from stainless steel, and its booster can be caught out of the air by the arms of its launch tower."
+ },
+ {
+  "key": "today",
+  "text": "This is where we are now. Almost thirty-four thousand objects are in orbit. More than eleven thousand of them are Starlink satellites."
+ },
+ {
+  "key": "junk",
+  "text": "And a great deal of it is junk. More than fourteen thousand of the objects in orbit, over four in every ten, are spent rocket stages, parts thrown off during launches, and debris from explosions and collisions. Many of the satellites are dead too. And these are only the pieces big enough to track. Below that, there are about one and a half million fragments between one and ten centimeters across, and at these speeds, even a one-centimeter fragment can disable a satellite. Low pieces fall back within a few years. Above about eight hundred kilometers, they can stay up for centuries.",
+  "say": "And a great deal of it is junk. More than fourteen thousand of the objects in orbit, over four in every ten, are spent rocket stages, parts thrown off during launches, and debris from explosions and collisions. Many of the satellites are dead too. And these are only the pieces big enough to track. Below that, there are about one and a half million fragments between one and ten centimeters across, and at these speeds, even a one-centimeter fragment can disable a satellite. Low pieces fall back within a few years. Above about eight hundred kilometers, they can stay up for centuries."
+ },
+ {
+  "key": "lineup",
+  "text": "These are some of the rockets that put them there, side by side, at one scale. From the little Juno I that launched Explorer 1, past the Saturn V that took Apollo to the Moon, to Starship, the biggest rocket ever flown. And this is what they carried, in the order they flew. First Sputnik, then Explorer and Vanguard, and the first probes to the Moon. Then the first people in orbit, the first probe to another planet, the first walk in space, and the first satellites to carry television across oceans. Apollo 11, and footprints on the Moon. Through the seventies, the first space stations, landers on Mars, and Voyager 1, now farther away than anything else we have built. Then the Space Shuttle, Mir, and Hubble, and the International Space Station, where crews have been on board without a break since 2000. This century brought rovers on Mars, China's first astronaut, a landing on a comet, India at Mars on its first try, and rockets that land and fly again. And now, thousands of Starlink satellites, the James Webb telescope, people flying around the Moon again, and Starship. Sixty-nine years. Nearly seven thousand launches. This is everything we've ever launched.",
+  "say": "These are some of the rockets that put them there, side by side, at one scale. From the little Juno One that launched Explorer One, past the Saturn Five that took Apollo to the Moon, to Starship, the biggest rocket ever flown. And this is what they carried, in the order they flew. First Sputnik, then Explorer and Vanguard, and the first probes to the Moon. Then the first people in orbit, the first probe to another planet, the first walk in space, and the first satellites to carry television across oceans. Apollo Eleven, and footprints on the Moon. Through the seventies, the first space stations, landers on Mars, and Voyager One, now farther away than anything else we have built. Then the Space Shuttle, Mir, and Hubble, and the International Space Station, where crews have been on board without a break since two thousand. This century brought rovers on Mars, China's first astronaut, a landing on a comet, India at Mars on its first try, and rockets that land and fly again. And now, thousands of Starlink satellites, the James Webb telescope, people flying around the Moon again, and Starship.\n\nSixty-nine years. Nearly seven thousand launches. This is everything we've ever launched.",
+  "marks": [
+   [
+    "These are some",
+    "rise",
+    0
+   ],
+   [
+    "Saturn Five",
+    "rise",
+    2
+   ],
+   [
+    "Starship, the biggest",
+    "rise",
+    10
+   ],
+   [
+    "And this is what",
+    "carry",
+    0
+   ],
+   [
+    "First Sputnik",
+    "pass",
+    0
+   ],
+   [
+    "Explorer and",
+    "pass",
+    2
+   ],
+   [
+    "Vanguard",
+    "pass",
+    3
+   ],
+   [
+    "the first probes",
+    "pass",
+    4
+   ],
+   [
+    "the first people",
+    "pass",
+    8
+   ],
+   [
+    "the first probe to another",
+    "pass",
+    12
+   ],
+   [
+    "the first walk",
+    "pass",
+    15
+   ],
+   [
+    "the first satellites to carry",
+    "pass",
+    16
+   ],
+   [
+    "Apollo Eleven",
+    "pass",
+    20
+   ],
+   [
+    "the first space stations",
+    "pass",
+    25
+   ],
+   [
+    "landers on Mars",
+    "pass",
+    32
+   ],
+   [
+    "Voyager One",
+    "pass",
+    33
+   ],
+   [
+    "the Space Shuttle",
+    "pass",
+    36
+   ],
+   [
+    "Mir,",
+    "pass",
+    38
+   ],
+   [
+    "Hubble",
+    "pass",
+    42
+   ],
+   [
+    "the International",
+    "pass",
+    47
+   ],
+   [
+    "rovers on Mars",
+    "pass",
+    50
+   ],
+   [
+    "China's first",
+    "pass",
+    52
+   ],
+   [
+    "a landing on a comet",
+    "pass",
+    53
+   ],
+   [
+    "India at Mars",
+    "pass",
+    61
+   ],
+   [
+    "rockets that land",
+    "pass",
+    64
+   ],
+   [
+    "thousands of Starlink",
+    "pass",
+    68
+   ],
+   [
+    "the James Webb",
+    "pass",
+    74
+   ],
+   [
+    "people flying around",
+    "pass",
+    79
+   ],
+   [
+    "and Starship.",
+    "pass",
+    80
+   ],
+   [
+    "Sixty-nine years",
+    "globe",
+    0
+   ],
+   [
+    "This is everything",
+    "all",
+    0
+   ]
+  ]
+ }
+]

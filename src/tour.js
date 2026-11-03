@@ -8,6 +8,7 @@ import meta from './catalog.json';
 import {dayOf} from './orbits.js';
 import {SHIPS, SITES} from './ships/ships.js';
 import {planBelt} from './belt.js';
+import {ABOUT_CUES, aboutDay, aboutLook} from './about.js';
 
 const SHIP = Object.fromEntries(SHIPS.map((s) => [s.key, s]));
 const BREAKUP_DAY = {
@@ -18,8 +19,10 @@ const BREAKUP_DAY = {
 const END_DAY = meta.endDay;
 
 // [kind, key, seconds on screen]
-// (open and close are only in the 5-minute cut: its cold open is a line of its own, and so is its last line)
+// (open and close are only in the 5-minute cut: its cold open is a line of its own, and so is its last line; about,
+// the intro on what the page is, is only in the narrated video and opens both cuts)
 const PLAN = [
+  ['about', 'about', 20],
   ['open', 'open', 12],
   ['ship', 'sputnik1', 15],
   ['ship', 'sputnik2', 12.5],
@@ -122,7 +125,7 @@ export const BEATS = [];
 {
   let t = 0;
   for (const [kind, key, dur] of ORDER ? ORDER.map((k) => PLAN_OF[k]) : PLAN) {
-    if (!FIT && (kind === 'open' || kind === 'close')) continue;
+    if (!FIT && (kind === 'open' || kind === 'close' || kind === 'about')) continue;
     if (FIT && !FIT[key]) continue;
     const d = FIT ? FIT[key] : dur;
     BEATS.push({kind, key, a: t, b: t + d});
@@ -134,6 +137,8 @@ const TODAY = BEATS.find((b) => b.kind === 'today');
 const LINEUP = BEATS.find((b) => b.kind === 'lineup');
 const STATS = BEATS.filter((b) => b.kind === 'stats');
 const OPEN = BEATS.find((b) => b.kind === 'open');
+// the intro, when the video has one: it fills the sky with the catalog's years, so the cold open starts on all of it
+const ABOUT_BEAT = ABOUT_CUES ? BEATS.find((b) => b.kind === 'about') : null;
 const CLOSER = BEATS.find((b) => b.kind === 'close');
 const SPUTNIK = BEATS.find((b) => b.key === 'sputnik1');
 // The 5-minute cut's prelude: its cold open, then the whole lineup (the rockets to scale, then everything they
@@ -149,9 +154,9 @@ export const TOUR_DURATION = last.b;
 // ("It all began on October fourth, 1957").
 // (Brad, 11-03: the 5-minute cut now keeps the long version's structure, the cold open straight into Sputnik and the
 // rockets and ships at the end, so its open line leads into the same rewind without a lineup between them)
-const OPEN_FIRST = !!(FIT && OPEN && SPUTNIK && BEATS[0] === OPEN && OPEN.b < SPUTNIK.a);
+const OPEN_FIRST = !!(FIT && OPEN && SPUTNIK && (BEATS[0] === OPEN || (ABOUT_BEAT && BEATS[0] === ABOUT_BEAT && BEATS[1] === OPEN)) && OPEN.b < SPUTNIK.a);
 const INTRO = PRELUDE || OPEN_FIRST
-  ? {grow: [OPEN.a + 0.6, OPEN.a + 7.2], hold: OPEN.b + GAP, rewind: [SPUTNIK.a - 1.2, SPUTNIK.a + 0.8], launch: SPUTNIK.a + 2.0, plate: SPUTNIK.a + 2.4, room: SPUTNIK.a + 1.0}
+  ? {grow: ABOUT_BEAT ? [ABOUT_CUES.gcat + 0.2, ABOUT_CUES.debris - 0.2] : [OPEN.a + 0.6, OPEN.a + 7.2], hold: OPEN.b + GAP, rewind: [SPUTNIK.a - 1.2, SPUTNIK.a + 0.8], launch: SPUTNIK.a + 2.0, plate: SPUTNIK.a + 2.4, room: SPUTNIK.a + 1.0}
   : FIT && BEATS[0].key === 'sputnik1' ? {grow: [0.6, 7.2], hold: 12.0, rewind: [12.0, 14.0], launch: 14.6, plate: 15.0, room: 13.4} : null;
 
 // ------------------------------------------------------------ the date
@@ -177,7 +182,7 @@ for (const beat of BEATS) {
     const T = BREAKUP_DAY[key];
     beat.day = T;
     DATE_KEYS.push([a, T - 1.5 / 24], [a + 4.5, T + 2.53 / 24], [b - 0.3, T + 3.6]);
-  } else if (kind === 'open' || (kind === 'lineup' && PRELUDE)) {
+  } else if (kind === 'open' || kind === 'about' || (kind === 'lineup' && PRELUDE)) {
     // the prelude's dates are shownDay's own (the date itself starts at Sputnik)
   } else if (kind === 'today') {
     DATE_KEYS.push([a + 2, END_DAY]);
@@ -246,6 +251,7 @@ export const tourDay = monotone(DATE_KEYS);
 export function shownDay(t) {
   if (FINALE && LINEUP && t > LINEUP.a + FINALE.carry && !(PRELUDE && t >= INTRO.rewind[0])) return finaleDay(t - LINEUP.a);
   if (!INTRO || t >= INTRO.rewind[1]) return tourDay(t);
+  if (ABOUT_BEAT && t < OPEN.a) return aboutDay(t, tourDay(0), END_DAY);
   const [g0, g1] = INTRO.grow;
   const [r0, r1] = INTRO.rewind;
   const start = tourDay(0);
@@ -580,6 +586,19 @@ function shipShot(beat, t, az, el0) {
   return shot;
 }
 // The cold open's camera: out from the globe as the years fill it, then a slow turn around today's swarm.
+// The intro's camera: low over the empty globe's limb under the title, rising and drawing back into the cold open's
+// as the catalog fills the sky.
+function aboutCam(t) {
+  const C = ABOUT_CUES;
+  const near = {dir: sphericalDir(SHOTS.introAz + 34 - t * 2.2, 3 + 0.5 * t), dist: 1.62 + 0.05 * t, target: new THREE.Vector3(0, 0.32, 0)};
+  const cam = blendCam(near, introCam(t), smooth(clamp01((t - C.gcat + 0.6) / 2.6)));
+  // while the list of parts is up on the left, the globe sits to the right of it, and it is back in the middle
+  // before the cold open
+  const side = smooth(clamp01((t - C.launch + 0.8) / 0.9)) * (1 - smooth(clamp01((t - C.film + 0.2) / 1.6)));
+  if (side <= 0) return cam;
+  const right = new THREE.Vector3(0, 1, 0).cross(cam.dir).normalize();
+  return {dir: cam.dir, dist: cam.dist, target: cam.target.clone().addScaledVector(right, -0.32 * cam.dist * side)};
+}
 function introCam(t) {
   const grow = smooth(clamp01((t - INTRO.grow[0]) / (INTRO.grow[1] - INTRO.grow[0])));
   const hold = smooth(clamp01((t - INTRO.grow[1]) / (INTRO.hold - INTRO.grow[1])));
@@ -764,11 +783,15 @@ export const trainGlowAt = (t) => {
   const beat = BEATS.find((b) => b.key === 'starlink');
   return beat ? smooth(clamp01((t - (beat.a + 1.1)) / 1.5)) * smooth(clamp01((beat.b + GAP / 2 - t) / 1.2)) : 0;
 };
-const STARLINK_PATH = [['a', 0, 8, 3.9], [-1.5, 0, 9, 3.1], [1.5, 0, 14, 3.35], [4.5, 0, 12, 4.1], ['b', 0, 8, 4.6]];
+// (the last column: how much of the turn toward the train's orbit the camera makes, when main.js asks for one with
+// aimStarlink: all of it as the train crosses, none at the launch site)
+const STARLINK_PATH = [['a', 0, 8, 3.9, 0], [-1.5, 0, 9, 3.1, 0], [1.5, 0, 14, 3.35, 1], [4.5, 0, 12, 4.1, 1], ['b', 0, 8, 4.6, 0]];
+let STARLINK_AIM = [0, 0];
+export const aimStarlink = (az, el) => { STARLINK_AIM = [az, el]; };
 const starlinkPathAt = (beat, t) => {
   const sw = beat.a + STARLINK_TRAIN * (beat.b - beat.a);
   const keys = (k) => STARLINK_PATH.map((row) => [row[0] === 'a' ? beat.a : row[0] === 'b' ? beat.b : sw + row[0], row[k]]);
-  return [eased(keys(1))(t), eased(keys(2))(t), eased(keys(3))(t)];
+  return [eased(keys(1))(t), eased(keys(2))(t), eased(keys(3))(t), eased(keys(4))(t)];
 };
 
 // One camera per beat, crossfaded through the gaps. centreOf(key, day, sim, out) gives a cloud's centre;
@@ -776,6 +799,7 @@ const starlinkPathAt = (beat, t) => {
 const beatCamera = (beat, t, centreOf, spinAt) => {
   // the 5-minute cut's prelude stays on the cold open's slow turn (the globe is dimmed behind the lineup)
   ensurePlan(spinAt, centreOf);
+  if (beat.kind === 'about') return aboutCam(t);
   if (beat.kind === 'open' || (beat.kind === 'lineup' && PRELUDE)) return introCam(t);
   if (beat.kind === 'ship') {
     const P = ensurePlan(spinAt, centreOf);
@@ -788,8 +812,8 @@ const beatCamera = (beat, t, centreOf, spinAt) => {
       // the frame (main.js puts it there) with the Cape still in view, and the camera pulls back for the last words
       // (Brad: the site was off screen when the camera went straight to the train, riding along with the train turned
       // the globe backwards, and then the train showed up late at the edge of the frame)
-      const [, de, dist] = starlinkPathAt(beat, t);
-      return {dir: sphericalDir(az, el + de), dist, target: new THREE.Vector3()};
+      const [, de, dist, aim] = starlinkPathAt(beat, t);
+      return {dir: sphericalDir(az + STARLINK_AIM[0] * aim, el + de + STARLINK_AIM[1] * aim), dist, target: new THREE.Vector3()};
     }
     const shot = shipShot(beat, t, az, el);
     if (INTRO && beat.key === 'sputnik1') {
@@ -908,6 +932,8 @@ export function plateRoomAt(t) {
 // the junk is left, and the who card cross-fades every dot to the color of its owner. Both undo themselves after.
 const STAT = Object.fromEntries(BEATS.filter((b) => b.kind === 'stats').map((b) => [b.key, b]));
 export function lookAt(t) {
+  const ab = aboutLook(t);
+  if (ab) return ab;
   const j = STAT.junk;
   const w = STAT.who;
   const junk = j ? smooth(clamp01(Math.min((t - j.a - 1) / 1.6, (w ? w.a + 0.5 : j.b + 1.6) - t) / 1.6)) : 0;
