@@ -147,7 +147,10 @@ export const TOUR_DURATION = last.b;
 // Times are seconds into the tour, set from the pauses in the first line of narration. In the 5-minute cut the cold
 // open is its own line and the lineup follows it; the rewind to Sputnik comes after the lineup, as its line starts
 // ("It all began on October fourth, 1957").
-const INTRO = PRELUDE
+// (Brad, 11-03: the 5-minute cut now keeps the long version's structure, the cold open straight into Sputnik and the
+// rockets and ships at the end, so its open line leads into the same rewind without a lineup between them)
+const OPEN_FIRST = !!(FIT && OPEN && SPUTNIK && BEATS[0] === OPEN && OPEN.b < SPUTNIK.a);
+const INTRO = PRELUDE || OPEN_FIRST
   ? {grow: [OPEN.a + 0.6, OPEN.a + 7.2], hold: OPEN.b + GAP, rewind: [SPUTNIK.a - 1.2, SPUTNIK.a + 0.8], launch: SPUTNIK.a + 2.0, plate: SPUTNIK.a + 2.4, room: SPUTNIK.a + 1.0}
   : FIT && BEATS[0].key === 'sputnik1' ? {grow: [0.6, 7.2], hold: 12.0, rewind: [12.0, 14.0], launch: 14.6, plate: 15.0, room: 13.4} : null;
 
@@ -503,17 +506,22 @@ const CLOSE = (() => {
     const l = H.b - H.a;
     keys.push([H.a + 0.45 * l, 3.4, -6, 85], [H.b, 5.0, 8, 110]);
   }
-  if (CLOSER) {
-    // the 5-minute cut's last line: the globe, centred again, draws back slowly to the end
+  const closer = () => {
+    if (!CLOSER) return;
     const l = CLOSER.b - CLOSER.a;
-    keys.push([CLOSER.a + 0.4 * l, 6.0, 18, 62], [CLOSER.b, 9.5, 22, 84], [CLOSER.b + 1, 9.5, 22, 84]);
-  }
+    // after the finale (the long version's order), the last line keeps drawing back from where the finale left off,
+    // still swinging the same way; otherwise (the old lineup-first cut) the globe, centred again, draws back slowly
+    if (LINEUP && !PRELUDE && LINEUP.b < CLOSER.a) keys.push([CLOSER.a + 0.4 * l, 11.5, 22, 170], [CLOSER.b, 13, 22, 180], [CLOSER.b + 1, 13, 22, 180]);
+    else keys.push([CLOSER.a + 0.4 * l, 6.0, 18, 62], [CLOSER.b, 9.5, 22, 84], [CLOSER.b + 1, 9.5, 22, 84]);
+  };
+  if (!(LINEUP && !PRELUDE && CLOSER && LINEUP.b < CLOSER.a)) closer();
   if (LINEUP && !PRELUDE) {
     if (FINALE) {
       // the narrated finale: the globe comes back large once the row of ships has gone, and pulls out slowly to the end
       const g = LINEUP.a + BELTPLAN.gone;
       keys.push([LINEUP.a + 3, 9.5, 12, 125], [g - 0.4, 2.7, 10, 132], [LINEUP.b, 10.5, 22, 160], [LINEUP.b + 1, 10.5, 22, 160]);
     } else keys.push([LINEUP.a + 3, 9.5, 12, 125], [LINEUP.b - 4, 11, 16, 135], [LINEUP.b, 14, 20, 150], [LINEUP.b + 1, 14, 20, 150]);
+    if (CLOSER && LINEUP.b < CLOSER.a) closer();
   }
   const at = (j) => monotone(keys.map((k) => [k[0], j === 1 ? Math.log(k[1]) : k[j]]));
   return {t0, dist: at(1), el: at(2), az: at(3)};

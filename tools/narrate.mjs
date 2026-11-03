@@ -105,6 +105,9 @@ const finale = (() => {
     else if (what === 'globe') F.globe[0] = at;
     else if (what === 'all') F.globe[1] = at;
   }
+  // a lineup line with no globe marks (the 5-minute cut, whose last line is a beat of its own): the clock runs on to
+  // today from the last ship to the end of the beat, as the row goes and the globe comes back
+  if (!F.globe[1]) F.globe = [F.stops[F.stops.length - 1][3], Math.round((dur.lineup - 0.5) * 100) / 100];
   console.log(`finale marks from ${al ? 'the alignment' : 'an estimate (no alignment saved)'}: carry ${F.carry} s, ${F.stops.length} named ships ${F.stops[0][0]}-${F.stops[F.stops.length - 1][1]} s, globe ${F.globe.join('-')} s of ${dur.lineup} s`);
   return F;
 })();
