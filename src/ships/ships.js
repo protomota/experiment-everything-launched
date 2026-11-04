@@ -5,6 +5,8 @@
 // code from published dimensions and photos (src/ships/build.js).
 // model.size: the real length of the model along an axis, so every model is in metres.
 // model.view: camera azimuth and elevation in degrees, and how much of the view the model fills.
+// carried: where the card's model is the rocket, the spacecraft it carried, with its own title and model, for the
+// narrated video's row of "what they carried" (the rockets themselves line up to scale just before it).
 // site: launch site [latitude, longitude] for the marker on the globe.
 
 export const SITES = {
@@ -58,6 +60,7 @@ const LIST = [
     body: 'The first American satellite. Its Geiger counter found that Earth is wrapped in belts of trapped radiation, now called the Van Allen belts. Explorer 1 sent data for four months and fell back to Earth in 1970.',
     photo: {src: 'https://media.protomota.com/everything-launched/photos/explorer1.webp', caption: 'James Van Allen at the University of Iowa', credit: 'Photo: Frederick W. Kent Collection, University of Iowa Archives', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Rockoon_Van_Allen.jpg'},
     model: {src: 'nasa:explorer-jupiter-c-rocket', size: ['y', 21.2], view: [25, 6, 0.86], dim: 'height'},
+    carried: {title: 'Explorer 1', model: {src: 'build:explorer1', size: ['y', 2.03], view: [25, 8, 0.7], dim: 'height'}},
   },
   {
     key: 'vanguard1',
@@ -160,6 +163,7 @@ const LIST = [
     body: 'The rocket that took Apollo 11 to the Moon. Four days after launch, Neil Armstrong and Buzz Aldrin landed while Michael Collins orbited above. Saturn V flew 13 times between 1967 and 1973 and never lost a payload.',
     photo: {src: 'https://media.protomota.com/everything-launched/photos/apollo11.webp', caption: 'Buzz Aldrin on the Moon, photographed by Neil Armstrong', credit: 'Photo: NASA', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Aldrin_Apollo_11_original.jpg'},
     model: {src: 'nasa:saturn-v', size: ['y', 110.6], view: [20, 5, 0.88], dim: 'height', paint: 'saturn'},
+    carried: {title: 'Columbia and Eagle · Apollo 11', model: {src: 'build:apollo', size: ['y', 16.4], view: [30, 10, 0.8], dim: 'height'}},
   },
   {
     key: 'skylab',
@@ -208,6 +212,7 @@ const LIST = [
     ],
     body: 'The first reusable spaceship: launched like a rocket, landed like a glider. STS-1 flew 20 years to the day after Gagarin. Five orbiters flew 135 missions; Challenger in 1986 and Columbia in 2003 were lost with 14 crew.',
     model: {src: 'build:shuttle', size: ['y', 56.1], view: [-48, 6, 0.86], dim: 'height'},
+    carried: {title: 'Columbia · STS-1', model: {src: 'build:orbiter', size: ['y', 37.2], view: [-48, 8, 0.8], dim: 'height'}},
   },
   {
     key: 'mir',
@@ -306,6 +311,7 @@ const LIST = [
     ],
     body: 'Three Falcon 9 first stages side by side. Its first flight sent a red Tesla Roadster into orbit around the Sun, and its two side boosters flew back and landed next to each other at Cape Canaveral.',
     model: {src: 'build:falconheavy', size: ['y', 70], view: [25, 5, 0.88], dim: 'height'},
+    carried: {title: 'Tesla Roadster · Falcon Heavy', model: {src: 'build:roadster', size: ['x', 3.95], view: [35, 14, 0.7], dim: 'bar'}},
   },
   {
     key: 'starlink',
@@ -374,6 +380,7 @@ const LIST = [
     body: 'The first people to fly to the Moon since Apollo 17 in 1972. Four astronauts, among them the first woman and the first Canadian to leave Earth orbit, looped around the far side of the Moon in an Orion capsule and splashed down off San Diego. On the way they went farther from Earth than anyone ever had, beating Apollo 13\'s record. Artemis I flew the same rocket without a crew in 2022.',
     photo: {src: 'https://media.protomota.com/everything-launched/photos/artemis2.webp', caption: 'Reid Wiseman, Victor Glover, Christina Koch and Jeremy Hansen', credit: 'Photo: NASA / Josh Valcarcel', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Artemis_2_Crew_Portrait.jpg'},
     model: {src: 'build:sls', size: ['y', 98.1], view: [30, 8, 0.86], dim: 'height'},
+    carried: {title: 'Orion · Artemis II', model: {src: 'build:orion', size: ['y', 8.2], view: [30, 14, 0.8], dim: 'height'}},
   },
   {
     key: 'starship',
@@ -390,6 +397,7 @@ const LIST = [
     ],
     body: 'The largest and most powerful rocket ever flown, built from stainless steel. Its booster has been caught out of the air by the launch tower\'s arms. On its 14th flight, on September 28, 2026, Starship reached orbit for the first time and released 26 Starlink satellites.',
     model: {src: 'build:starship', size: ['y', 124.4], view: [30, 5, 0.9], dim: 'height'},
+    carried: {title: 'Starship', model: {src: 'build:starshipShip', size: ['y', 52.1], view: [30, 5, 0.86], dim: 'height'}},
   },
   {
     key: 'telstar1',
@@ -597,6 +605,7 @@ const LIST = [
     ],
     body: 'Europe\'s own rocket, built so Europe would not need the United States to launch its satellites. The first flight, on Christmas Eve 1979, put a test capsule on the planned orbit. It was the first rocket designed mainly for commercial satellites, and its successors, up to Ariane 6, still fly from French Guiana.',
     model: {src: 'build:ariane1', size: ['y', 50], view: [30, 5, 0.86], dim: 'height'},
+    carried: {title: 'CAT-1 test capsule · Ariane 1', model: {src: 'build:cat1', size: ['y', 2.75], view: [30, 12, 0.7], dim: 'height'}},
   },
   {
     key: 'tianhe',
@@ -1106,6 +1115,7 @@ const LIST = [
     body: 'The first American in space, three weeks after Gagarin. Alan Shepard rode a 15-minute arc out over the Atlantic and back, and was the first to steer a spacecraft by hand. After nearly three hours of holds on the pad he had to wet his suit. The capsule came back in such good shape that engineers said it could have flown again. It is in the National Air and Space Museum.',
     photo: {src: 'https://media.protomota.com/everything-launched/photos/freedom7.webp', caption: 'Alan Shepard, 1961', credit: 'Photo: NASA', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:Alan_B._Shepard_Jr._1961_portrait.jpg'},
     model: {src: 'build:freedom7', size: ['y', 25.41], view: [30, 6, 0.86], dim: 'height'},
+    carried: {title: 'Freedom 7', model: {src: 'nasa:redstone-3-freedom-7', size: ['x', 1.89], view: [30, 8, 0.66], dim: 'height', paint: 'mercury'}},
   },
   {
     key: 'mariner2',

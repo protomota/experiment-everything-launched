@@ -52,9 +52,10 @@ const SAT_ROWS = (() => {
   return Object.fromEntries(Object.entries(links).filter(([, v]) => Array.isArray(v) && row.has(String(v[0][0]))).map(([k, v]) => [k, row.get(String(v[0][0]))]));
 })();
 const script = `window.__SAT_ROWS=${JSON.stringify(SAT_ROWS)};\n` + (NARR ? `window.__TOUR_DUR=${JSON.stringify(NARR.dur)};window.__TOUR_GAP=${NARR.gap || 1.5};window.__TOUR_FINALE=${JSON.stringify(NARR.finale || null)};window.__TOUR_ORDER=${JSON.stringify(NARR.order || null)};\n` : '') + (NARR && process.env.PHOTOS ? `window.__PHOTOS=${fs.readFileSync(process.env.PHOTOS, 'utf8')};\n` : '') + (NARR && process.env.ABOUT ? `window.__ABOUT=${fs.readFileSync(process.env.ABOUT, 'utf8')};\n` : '') + bundle.outputFiles[0].text.replaceAll('</script', '<\\/script');
-// the NASA models the ships use (the rest are drawn in code), plus those the code-built Shuttle and Freedom 7 load
+// the NASA models the ships use (the rest are drawn in code), plus those the code-built Shuttle and Freedom 7 load, and in
+// the video the Tesla Roadster its finale shows for Falcon Heavy (from Sketchfab, CC BY 4.0; the site never shows it)
 const shipsSrc = fs.readFileSync('src/ships/ships.js', 'utf8');
-const MODEL_NAMES = [...new Set([...shipsSrc.matchAll(/src: 'nasa:([a-z0-9-]+)'/g)].map((m) => m[1]).concat(['space-shuttle-d', 'space-shuttle-d-door-prt', 'space-shuttle-d-door-stb', 'redstone-3-freedom-7']))];
+const MODEL_NAMES = [...new Set([...shipsSrc.matchAll(/src: 'nasa:([a-z0-9-]+)'/g)].map((m) => m[1]).concat(['space-shuttle-d', 'space-shuttle-d-door-prt', 'space-shuttle-d-door-stb', 'redstone-3-freedom-7'], process.env.SITE ? [] : ['tesla-roadster-2008']))];
 const SHIP_COUNT = (shipsSrc.match(/^    key: '/gm) || []).length;
 const MODEL_BASE = new URL(SITE_URL).pathname + 'models/';
 // the search index loads from next to the page; the offline copy has no search

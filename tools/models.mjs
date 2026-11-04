@@ -55,7 +55,10 @@ const MODELS = {
   'osiris-rex': [30000, 0.05],
   'insight-lander': [30000, 0.03],
   'insight-lander-b': 40000,
+  // not NASA's: "2008 Tesla Roadster" by the 86 guy, CC BY 4.0 (https://skfb.ly/oP8Mt), roof off, in models/sketchfab/
+  'tesla-roadster-2008': 40000,
 };
+const FROM = {'tesla-roadster-2008': 'models/sketchfab'};
 await MeshoptEncoder.ready;
 await MeshoptDecoder.ready;
 await MeshoptSimplifier.ready;
@@ -75,7 +78,8 @@ const tris = (doc) => {
   return Math.round(n);
 };
 for (const name of names) {
-  const doc = await io.read(`models/nasa/${name}.glb`);
+  const src = `${FROM[name] || 'models/nasa'}/${name}.glb`;
+  const doc = await io.read(src);
   for (const a of doc.getRoot().listAnimations()) a.dispose();
   doc.getRoot().listExtensionsUsed().forEach((e) => { if (e.extensionName === 'KHR_draco_mesh_compression') e.dispose(); });
   const before = tris(doc);
@@ -91,5 +95,5 @@ for (const name of names) {
   );
   const out = `models/web/${name}.glb`;
   await io.write(out, doc);
-  console.log(name, before, '->', tris(doc), 'tris', (fs.statSync(`models/nasa/${name}.glb`).size / 1e6).toFixed(2), '->', (fs.statSync(out).size / 1e6).toFixed(2), 'MB');
+  console.log(name, before, '->', tris(doc), 'tris', (fs.statSync(src).size / 1e6).toFixed(2), '->', (fs.statSync(out).size / 1e6).toFixed(2), 'MB');
 }

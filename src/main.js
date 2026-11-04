@@ -41,6 +41,9 @@ const KEYS = {S00002: 'sputnik', S00005: 'vanguard', S00858: 'syncom', S25730: '
 const events = meta.events.map((ev) => ({...ev, key: ev.kind === 'starlink' ? 'starlink' : KEYS[ev.focus]}));
 const byKey = Object.fromEntries(events.map((ev) => [ev.key, ev]));
 const SHIP = Object.fromEntries(SHIPS.map((sh, k) => [sh.key, {...sh, index: k, day: dayOf(sh.when)}]));
+// a ship as the finale's row shows it: what the rocket carried, where its card shows the rocket (ships.js carried)
+const carriedOf = (sh) => (sh.carried ? {...sh, key: `${sh.key}-carried`, title: sh.carried.title, model: sh.carried.model} : sh);
+const CARRIED = SHIPS.filter((sh) => sh.carried).map(carriedOf);
 // the debris events' cards, with their counts from the catalog
 const EVENT = Object.fromEntries(Object.values(EVENT_CARDS).map((c, k) => {
   const ev = byKey[c.key];
@@ -1139,7 +1142,9 @@ function main(data, tracks) {
   };
 
   // the narrated video's finale (T.FINALE): the rockets to scale, then the row of every ship, then back to the globe
-  const allShips = SHIPS.slice().sort((x, y) => (x.when < y.when ? -1 : 1));
+  // the row shows what each rocket carried, so the cards whose model is a rocket (Juno I, Mercury-Redstone, Saturn V,
+  // Ariane 1, the Shuttle stack, Falcon Heavy, SLS, Starship) send their spacecraft or payload instead
+  const allShips = SHIPS.map(carriedOf).sort((x, y) => (x.when < y.when ? -1 : 1));
   const lineupKicker = lineupEl.querySelector('.kicker');
   const lineupH2 = lineupEl.querySelector('h2');
   const year = (sh) => sh.when.slice(0, 4);
@@ -1454,7 +1459,7 @@ function main(data, tracks) {
         return [+(((n.x + 1) / 2) * innerWidth).toFixed(1), +(((1 - n.y) / 2) * innerHeight).toFixed(1), +markMat.opacity.toFixed(2), facing ? 1 : 0];
       }),
     };
-    Promise.all(SHIPS.map((sh) => stageShips.load(sh))).then(() => {
+    Promise.all([...SHIPS, ...CARRIED].map((sh) => stageShips.load(sh))).then(() => {
       window.SIM.ready = true;
     }, (err) => {
       console.error('model load failed', err);
@@ -1478,7 +1483,7 @@ function main(data, tracks) {
   // ---------------------------------------------------------- the live page
   // fetch the ship models in launch order, one at a time, so plates are ready when the tour reaches them
   setTimeout(() => {
-    SHIPS.reduce((p, sh) => p.then(() => (asked.has(sh.key) ? null : (asked.add(sh.key), stageShips.load(sh).then(() => { live.dirty = true; })))).catch(() => {}), Promise.resolve());
+    (T.FINALE ? [...SHIPS, ...CARRIED] : SHIPS).reduce((p, sh) => p.then(() => (asked.has(sh.key) ? null : (asked.add(sh.key), stageShips.load(sh).then(() => { live.dirty = true; })))).catch(() => {}), Promise.resolve());
   }, 1500);
   const controls = new OrbitControls(camera);
   controls.enableDamping = true;

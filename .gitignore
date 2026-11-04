@@ -13,9 +13,12 @@ narration/*.wav
 # NASA 3D Resources originals (public domain): github.com/nasa/NASA-3D-Resources; tools/models.mjs shrinks them into
 # models/web/, which is what the page uses
 models/nasa/
+# the Sketchfab original of the Tesla Roadster (CC BY 4.0, converted by v5-work/roadster/tools/convert.py), shrunk the same way
+models/sketchfab/
 .DS_Store
 ._*
 
 # GCAT downloads (npm run fetch-gcat)
 gcat/
 narration/__pycache__/
+node_modules/

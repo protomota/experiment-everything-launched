@@ -690,10 +690,19 @@ function sls() {
 }
 
 // ------------------------------------------------------------ Starship (Block 3: 72.3 m booster, 52.1 m ship, 9 m wide)
-function starship() {
+function starship(loadNasa, shipOnly = false) {
   const M = materials();
   const g = new THREE.Group();
   const R = 4.5;
+  if (shipOnly) {
+    // the ship's own six Raptors: three for sea level in the middle, three wide vacuum bells around them
+    lathe([[0.01, 72.3], [R, 72.3]], M.soot, g, 96);
+    for (let k = 0; k < 3; k += 1) {
+      const a = (k / 3) * TAU;
+      bell(0.2, 0.65, 1.6, g, Math.sin(a) * 1.0, 72.3, Math.cos(a) * 1.0, 24);
+      bell(0.3, 1.15, 2.4, g, Math.sin(a + Math.PI / 3) * 3.0, 72.3, Math.cos(a + Math.PI / 3) * 3.0, 32);
+    }
+  } else {
   // booster: 33 Raptors under a sooted heat shield
   const rings = [[3, 0.85], [10, 2.35], [20, 3.75]];
   for (const [n, rr] of rings) {
@@ -728,6 +737,7 @@ function starship() {
     g.add(fin);
   }
   for (const a of [0.9, -0.9]) box(0.5, 0.5, 1.1, M.steel, g, [Math.sin(a) * (R + 0.5), 68.6, Math.cos(a) * (R + 0.5)]).rotation.y = a;
+  }
   // ship: steel on the lee side, black hexagonal tiles on the windward side
   const shipTop = 124.4;
   const noseStart = 104.2;
@@ -756,6 +766,7 @@ function starship() {
     fwd.rotation.z = side * -0.22;
     fwd.position.z = side > 0 ? -0.15 : 0.15;
   }
+  if (shipOnly) g.position.y = -72.3;
   return g;
 }
 
@@ -786,8 +797,18 @@ async function shuttle(loadNasa) {
     box(0.4, 0.4, 1.5, M.darkmetal, g, [s * 4.6, 12.2, 0]).rotation.y = Math.PI / 2;
     box(0.4, 0.4, 1.5, M.darkmetal, g, [s * 4.6, 40.0, 0]).rotation.y = Math.PI / 2;
   }
-  // the orbiter: NASA's model is z-up with its nose along +x and its payload bay doors in two separate files (without
-  // them the open bay shows the tank through it). Stand it nose up, tail and engines down, belly to the tank.
+  const {holder, depth} = await standingOrbiter(loadNasa);
+  const wrap = new THREE.Group();
+  wrap.add(holder);
+  // engines about 5.3 m above the boosters' base, so the nose comes up to the top of the intertank; the belly about
+  // 0.9 m off the tank's foam
+  wrap.position.set(0, 5.3 + 37.24 / 2, ER + 0.9 + depth / 2);
+  g.add(wrap);
+  return g;
+}
+// the orbiter: NASA's model is z-up with its nose along +x and its payload bay doors in two separate files (without
+// them the open bay shows the tank through it). Stood nose up, tail and engines down, belly to -z.
+async function standingOrbiter(loadNasa) {
   const [orb, doorP, doorS] = await Promise.all(['space-shuttle-d', 'space-shuttle-d-door-prt', 'space-shuttle-d-door-stb'].map(loadNasa));
   const box3 = new THREE.Box3().setFromObject(orb);
   const size = box3.getSize(new THREE.Vector3());
@@ -810,14 +831,7 @@ async function shuttle(loadNasa) {
   holder.add(parts);
   // turning about z by +90 degrees takes the nose (+x) to +y; the belly (-z) stays facing the tank
   holder.rotation.set(0, 0, Math.PI / 2);
-  const wrap = new THREE.Group();
-  wrap.add(holder);
-  // engines about 5.3 m above the boosters' base, so the nose comes up to the top of the intertank; the belly about
-  // 0.9 m off the tank's foam
-  const half = size.z * s / 2;
-  wrap.position.set(0, 5.3 + 37.24 / 2, ER + 0.9 + half);
-  g.add(wrap);
-  return g;
+  return {holder, depth: size.z * s};
 }
 
 
@@ -2043,4 +2057,231 @@ async function freedom7(loadNasa) {
   return g;
 }
 
-export const BUILDERS = {luna2, luna3, mariner2, mars3, buran, falcon1, dragon1, tianwen1, dart, freedom7, sputnik2, tiros1, echo1, earlybird, luna9, venera7, lunokhod1, mom, hayabusa2, change4, telstar, dfh1, aryabhata, ohsumi, voskhod2, soyuz, salyut1, navstar, ariane1, newglenn: newGlenn, tianhe, vikram, kuiper, sputnik, vanguard, syncom, vostok, shenzhou, falcon9, falconheavy: falconHeavy, dragon, starlink, starlinkv2: starlinkV2, sls, starship, shuttle};
+// ------------------------------------------------------------ what the rockets carried: the finale's row shows the
+// spacecraft themselves where the card shows the rocket (Brad: Explorer 1 showed up there as its Juno I)
+
+// Explorer 1: a 2.03 m, 15.2 cm pencil, the fourth-stage motor and the instruments in one, sandblasted stainless steel
+// with white stripes along it for its temperature, and four whip aerials spun out from the middle
+function explorer1() {
+  const M = materials();
+  const g = new THREE.Group();
+  const R = 0.076;
+  const steel = new THREE.MeshStandardMaterial({color: 0x8f9397, roughness: 0.55, metalness: 1});
+  bell(0.032, 0.058, 0.12, g, 0, 0.12, 0, 24);
+  cyl(R, 0.12, 1.14, steel, g, 48);
+  cyl(R * 1.01, 1.14, 1.2, M.black, g, 48);
+  cyl(R, 1.2, 1.72, steel, g, 48);
+  lathe([[R, 1.72], [R * 0.86, 1.82], [R * 0.5, 1.95], [0.012, 2.03]], steel, g, 48);
+  for (const [y0, y1] of [[0.2, 1.1], [1.24, 1.7]]) {
+    for (let k = 0; k < 8; k += 1) lathe([[R * 1.004, y0], [R * 1.004, y1]], M.white, g, 6, (k / 8) * TAU, TAU / 22);
+  }
+  for (let k = 0; k < 4; k += 1) {
+    const a = (k / 4) * TAU + Math.PI / 4;
+    rod([Math.cos(a) * R, 1.17, Math.sin(a) * R], [Math.cos(a) * (R + 0.56), 1.17, Math.sin(a) * (R + 0.56)], 0.0035, M.metal, g);
+  }
+  return g;
+}
+
+// Apollo 11 as it flew to the Moon: Columbia, the command and service module, docked nose to nose with Eagle, the
+// lunar module, which hangs upside down off the command module's docking probe (11 m CSM, 7 m LM with its legs out)
+function apolloLM(M) {
+  const lm = new THREE.Group();
+  // descent stage: an octagon in gold foil and black, the engine under it, four legs with footpads
+  const oct = mesh(new THREE.CylinderGeometry(2.28, 2.28, 1.65, 8, 1), M.mli, lm, [0, 2.33, 0]);
+  oct.rotation.y = Math.PI / 8;
+  for (let k = 0; k < 4; k += 1) {
+    const a = (k / 4) * TAU;
+    box(1.3, 1.2, 0.05, M.black, lm, [Math.sin(a) * 2.12, 2.33, Math.cos(a) * 2.12]).rotation.y = a;
+  }
+  bell(0.35, 0.75, 0.95, lm, 0, 1.5, 0, 28);
+  for (let k = 0; k < 4; k += 1) {
+    const a = (k / 4) * TAU + Math.PI / 4;
+    const at = (r, y) => [Math.sin(a) * r, y, Math.cos(a) * r];
+    const knee = at(3.55, 1.05);
+    rod(at(2.0, 2.9), at(4.25, 0.3), 0.09, M.gold, lm);
+    rod(at(1.9, 1.55), knee, 0.05, M.metal, lm);
+    rod([Math.sin(a + 0.35) * 1.9, 1.55, Math.cos(a + 0.35) * 1.9], knee, 0.04, M.metal, lm);
+    rod([Math.sin(a - 0.35) * 1.9, 1.55, Math.cos(a - 0.35) * 1.9], knee, 0.04, M.metal, lm);
+    lathe([[0.02, 0.0], [0.46, 0.04], [0.47, 0.14], [0.12, 0.3]], M.gold, lm, 32).position.set(Math.sin(a) * 4.3, 0, Math.cos(a) * 4.3);
+  }
+  // ascent stage: the faceted crew cabin, its two propellant tanks, the equipment bay behind, the docking tunnel on top
+  const asc = new THREE.Group();
+  const P = (x, y, z) => new THREE.Vector3(x, y, z);
+  const cabin = [];
+  for (const sx of [-1, 1]) {
+    cabin.push(P(sx * 1.2, 0.3, 1.15), P(sx * 1.2, 1.85, 1.15), P(sx * 0.7, 2.3, 0.95), P(sx * 0.6, 0.0, 0.95));
+    cabin.push(P(sx * 1.2, 0.3, -0.7), P(sx * 1.0, 2.2, -0.7), P(sx * 0.6, 0.0, -0.7));
+  }
+  mesh(new ConvexGeometry(cabin), M.lightgrey, asc);
+  // the black front, the two triangular windows and the hatch
+  panel(2.36, 1.51, M.black, asc, [0, 1.075, 1.16]);
+  for (const sx of [-1, 1]) {
+    const tri = new THREE.Shape(sx > 0 ? [V2(0, 0), V2(0.62, 0), V2(0.1, 0.52)] : [V2(0, 0), V2(-0.1, 0.52), V2(-0.62, 0)]);
+    mesh(new THREE.ShapeGeometry(tri), M.glass, asc, [sx * 0.12, 1.25, 1.17]);
+  }
+  panel(0.82, 0.82, M.darkmetal, asc, [0, 0.62, 1.17]);
+  for (const sx of [-1, 1]) {
+    const tank = cyl(0.62, -0.62, 0.62, M.alu, asc, 32);
+    tank.rotation.x = Math.PI / 2;
+    tank.position.set(sx * 1.45, 0.95, -0.15);
+  }
+  box(2.6, 1.5, 1.0, M.mli, asc, [0, 1.25, -1.2]);
+  cyl(0.42, 2.15, 2.75, M.lightgrey, asc, 32);
+  // reaction-control quads at the four corners, the steerable S-band dish and the rendezvous radar
+  for (const [x, z] of [[1.6, 0.95], [-1.6, 0.95], [1.6, -0.95], [-1.6, -0.95]]) {
+    box(0.3, 0.3, 0.3, M.darkmetal, asc, [x, 1.75, z]);
+    for (const [dx, dy, dz] of [[Math.sign(x), 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, Math.sign(z)]]) {
+      const n = cyl(0.04, 0, 0.22, M.engine, asc, 12, 0.07);
+      n.position.set(x + dx * 0.16, 1.75 + dy * 0.16, z + dz * 0.16);
+      n.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(dx, dy, dz));
+    }
+  }
+  const dish = (r, pos) => {
+    const d = lathe([[0.02, 0], [r * 0.5, 0.03], [r, 0.12]], M.white, asc, 32);
+    d.position.set(...pos);
+    d.rotation.x = -0.9;
+    return d;
+  };
+  rod([0.9, 2.05, -0.3], [1.3, 2.75, -0.3], 0.03, M.metal, asc);
+  dish(0.42, [1.3, 2.8, -0.3]);
+  dish(0.3, [-0.65, 2.35, 0.7]);
+  asc.position.y = 3.15;
+  lm.add(asc);
+  return lm;
+}
+function apollo() {
+  const M = materials();
+  const g = new THREE.Group();
+  const R = 1.956;
+  // service module: the main engine's long bell, the cylinder, its radiators and the reaction-control quads
+  bell(0.45, 1.22, 2.85, g, 0, 0.05, 0, 40);
+  lathe([[0.5, 0], [R * 0.98, 0.02], [R, 0.12], [R, 4.6], [R * 0.99, 4.72]], M.paint, g, 96);
+  for (const a of [0.2, Math.PI + 0.2]) lathe([[R * 1.003, 2.6], [R * 1.003, 4.3]], M.lightgrey, g, 24, a, 1.3);
+  for (let k = 0; k < 4; k += 1) {
+    const a = (k / 4) * TAU + Math.PI / 4;
+    const quad = new THREE.Group();
+    box(0.25, 0.9, 0.5, M.white, quad, [0, 0, 0]);
+    for (const [dy, dz] of [[0.55, 0], [-0.55, 0], [0, 0.35], [0, -0.35]]) {
+      const n = cyl(0.04, 0, 0.2, M.engine, quad, 12, 0.08);
+      n.position.set(0.08, dy, dz);
+      n.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, Math.sign(dy), Math.sign(dz)));
+    }
+    quad.position.set(Math.sin(a) * (R + 0.12), 3.6, Math.cos(a) * (R + 0.12));
+    quad.rotation.y = a - Math.PI / 2;
+    g.add(quad);
+  }
+  // the high-gain antenna on its boom off the back of the service module: four small dishes in a square
+  rod([0, 0.3, -R], [0, -0.6, -R - 1.4], 0.05, M.metal, g);
+  for (const [dx, dy] of [[-0.42, -0.42], [0.42, -0.42], [-0.42, 0.42], [0.42, 0.42]]) {
+    const d = lathe([[0.02, 0], [0.2, 0.03], [0.38, 0.12]], M.white, g, 28);
+    d.position.set(dx, -0.6 + dy, -R - 1.55);
+    d.rotation.x = -Math.PI / 2;
+  }
+  // command module: the heat shield, the mirror-taped cone at 32.5 degrees, the docking tunnel and probe
+  lathe([[0.05, 4.48], [1.2, 4.55], [R, 4.72]], M.soot, g, 96);
+  lathe([[R, 4.72], [R * 0.995, 4.82], [0.64, 6.95], [0.46, 7.12], [0.42, 7.2], [0.42, 7.55]], M.alu, g, 96);
+  for (let k = 0; k < 2; k += 1) mesh(new THREE.CircleGeometry(0.12, 20), M.glass, g, [Math.sin(0.5 - k) * 1.4, 5.75, Math.cos(0.5 - k) * 1.4]).lookAt(Math.sin(0.5 - k) * 3, 6.7, Math.cos(0.5 - k) * 3);
+  rod([0, 7.55, 0], [0, 7.9, 0], 0.05, M.metal, g);
+  // Eagle, upside down, its docking tunnel on Columbia's probe
+  const lm = apolloLM(M);
+  lm.rotation.x = Math.PI;
+  lm.position.y = 7.6 + 5.9;
+  g.add(lm);
+  return g;
+}
+
+// Ariane 1's first flight: CAT-1, an aluminium drum of instruments that recorded the ride, topped by a truncated cone
+// of ballast (no published dimensions; drawn about 1.8 m wide from ESA's photo, on its adapter ring)
+function cat1() {
+  const M = materials();
+  const g = new THREE.Group();
+  const alu = new THREE.MeshStandardMaterial({color: 0xb9bcbd, roughness: 0.45, metalness: 0.85});
+  lathe([[0.7, 0], [0.98, 0.05], [0.98, 0.16]], M.darkmetal, g, 64);
+  cyl(0.92, 0.16, 0.95, alu, g, 64);
+  ring(0.925, 0.02, 0.95, M.metal, g);
+  lathe([[0.92, 0.95], [0.86, 2.05]], alu, g, 64);
+  ring(0.865, 0.02, 2.05, M.metal, g);
+  lathe([[0.86, 2.05], [0.5, 2.75], [0.01, 2.75]], M.lightgrey, g, 64);
+  // access panels and connectors on the drum
+  for (const [a, y, w, h] of [[0.3, 1.5, 0.32, 0.3], [2.2, 1.3, 0.26, 0.4], [4.1, 0.6, 0.24, 0.2]]) {
+    const r = y > 0.95 ? 0.92 - ((y - 0.95) / 1.1) * 0.06 + 0.006 : 0.926;
+    panel(w, h, M.grey, g, [Math.sin(a) * r, y, Math.cos(a) * r], [0, a, 0]);
+  }
+  return g;
+}
+
+// Falcon Heavy's payload: Elon Musk's 2008 Tesla Roadster, top down, with Starman at the wheel. The car is "2008 Tesla
+// Roadster" by the 86 guy on Sketchfab (CC BY 4.0, https://skfb.ly/oP8Mt), converted with its roof off and its nose
+// along +x (v5-work/roadster/tools/convert.py) and shrunk by tools/models.mjs; Starman is built here
+async function roadster(loadNasa) {
+  const g = new THREE.Group();
+  g.add(await loadNasa('tesla-roadster-2008'));
+  starman(g);
+  return g;
+}
+
+// Starman in the driver's seat on the left (-z, measured from the car's seat): leaning back with the seat, legs out to
+// the pedals, right hand on the wheel and left arm resting on the door
+function starman(g) {
+  const M = materials();
+  const suit = new THREE.MeshStandardMaterial({color: 0xeceae4, roughness: 0.6});
+  const at = (x, y, dz = 0) => [x, y, -0.29 + dz];
+  rod(at(-0.27, 0.36), at(-0.4, 0.82), 0.19, suit, g);
+  sphere(0.19, suit, g, at(-0.27, 0.38), 24);
+  sphere(0.2, suit, g, at(-0.4, 0.8), 24);
+  for (const dz of [-0.1, 0.1]) {
+    rod(at(-0.22, 0.36, dz), at(0.16, 0.44, dz), 0.075, suit, g);
+    rod(at(0.16, 0.44, dz), at(0.42, 0.22, dz), 0.065, suit, g);
+  }
+  cyl(0.12, 0, 0.06, suit, g, 20).position.set(...at(-0.42, 0.9));
+  sphere(0.16, suit, g, at(-0.41, 1.04), 32);
+  const visor = sphere(0.125, M.glass, g, at(-0.31, 1.05), 24);
+  visor.scale.set(0.6, 0.85, 1);
+  rod(at(-0.4, 0.82, 0.2), at(-0.05, 0.64, 0.16), 0.055, suit, g);
+  rod(at(-0.05, 0.64, 0.16), at(0.3, 0.68, 0.1), 0.05, suit, g);
+  rod(at(-0.4, 0.82, -0.2), at(-0.15, 0.76, -0.5), 0.055, suit, g);
+  rod(at(-0.15, 0.76, -0.5), at(0.12, 0.78, -0.56), 0.05, suit, g);
+}
+
+// the Shuttle orbiter on its own, as it flew in orbit: Columbia on STS-1, nose up
+async function orbiter(loadNasa) {
+  const g = new THREE.Group();
+  g.add((await standingOrbiter(loadNasa)).holder);
+  return g;
+}
+
+// Starship's upper stage, the ship itself, without its Super Heavy booster
+const starshipShip = () => starship(null, true);
+
+// Artemis II: Orion, a 5 m capsule tiled in silver, on Europe's service module with its four solar wings (19 m across)
+function orion() {
+  const M = materials();
+  const g = new THREE.Group();
+  const R = 2.05;
+  bell(0.28, 0.62, 1.35, g, 0, 0, 0, 32);
+  for (let k = 0; k < 8; k += 1) {
+    const a = (k / 8) * TAU + Math.PI / 8;
+    bell(0.05, 0.1, 0.3, g, Math.sin(a) * 1.5, 0.05, Math.cos(a) * 1.5, 12);
+  }
+  lathe([[0.5, 0], [R, 0.08], [R, 2.75]], M.paint, g, 96);
+  lathe([[R * 1.004, 0.3], [R * 1.004, 2.5]], M.mli, g, 48, 0.3, 0.9);
+  lathe([[R, 2.75], [2.42, 3.05], [2.45, 3.3]], M.lightgrey, g, 96);
+  // the four wings, each three panels, swept a little back
+  for (let k = 0; k < 4; k += 1) {
+    const a = (k / 4) * TAU + Math.PI / 4;
+    const wing = new THREE.Group();
+    box(0.9, 0.12, 0.12, M.darkmetal, wing, [0.45, 0, 0]);
+    for (let j = 0; j < 3; j += 1) box(2.02, 0.03, 2.0, M.cells, wing, [1.0 + j * 2.08 + 1.01, 0, 0]);
+    wing.position.set(Math.cos(a) * R, 2.2, Math.sin(a) * R);
+    wing.rotation.set(0, -a, 0.12);
+    g.add(wing);
+  }
+  // crew module: the heat shield, the tiled back shell up to the docking hatch
+  lathe([[0.05, 3.25], [1.6, 3.3], [2.51, 3.45]], M.soot, g, 96);
+  lathe([[2.51, 3.45], [2.49, 3.6], [0.98, 6.0], [0.82, 6.2], [0.82, 6.55]], M.shield, g, 96);
+  for (const a of [-0.5, 0.5, Math.PI - 0.5, Math.PI + 0.5]) mesh(new THREE.CircleGeometry(0.14, 20), M.glass, g, [Math.sin(a) * 2.01, 4.4, Math.cos(a) * 2.01]).lookAt(Math.sin(a) * 4, 5.6, Math.cos(a) * 4);
+  cyl(0.6, 6.55, 6.8, M.metal, g, 32);
+  return g;
+}
+
+export const BUILDERS = {explorer1, apollo, orion, cat1, roadster, orbiter, starshipShip, luna2, luna3, mariner2, mars3, buran, falcon1, dragon1, tianwen1, dart, freedom7, sputnik2, tiros1, echo1, earlybird, luna9, venera7, lunokhod1, mom, hayabusa2, change4, telstar, dfh1, aryabhata, ohsumi, voskhod2, soyuz, salyut1, navstar, ariane1, newglenn: newGlenn, tianhe, vikram, kuiper, sputnik, vanguard, syncom, vostok, shenzhou, falcon9, falconheavy: falconHeavy, dragon, starlink, starlinkv2: starlinkV2, sls, starship, shuttle};
